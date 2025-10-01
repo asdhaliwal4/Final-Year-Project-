@@ -1,0 +1,84 @@
+/* src/components/CreateAccount.css */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.create-account-page {
+  display: flex;
+  justify-content: center; /* center horizontally */
+  align-items: center; /* center vertically */
+  height: 100vh; /* full screen height */
+  width: 100vw; /* full screen width */
+  background-color: #f9f9f9;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  position: fixed; /* fixes positioning issues */
+  top: 0;
+  left: 0;
+}
+
+.form-container {
+  background: #fff;
+  padding: 2.5rem 3rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 400px; /* restricts form width */
+  text-align: center;
+}
+
+.form-container h1 {
+  margin-bottom: 1.5rem;
+  color: #0d6efd;
+  font-size: 1.8rem;
+}
+
+/* Form styling */
+form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+label {
+  text-align: left;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+input {
+  padding: 0.6rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: #0d6efd;
+  box-shadow: 0 0 3px rgba(13, 110, 253, 0.4);
+}
+
+/* Submit button */
+.submit-button {
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s ease-in-out;
+  margin-top: 0.5rem;
+}
+
+.submit-button:hover {
+  background-color: #0b5ed7;
+}

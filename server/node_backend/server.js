@@ -16,7 +16,7 @@ app.get("/", (req, res) => {
   res.send("✅ Node backend is running!");
 });
 
-// Test API route
+// Test API route to another page
 app.get("/api/test", (req, res) => {
   res.json({
     message: "✅ API route working!",
