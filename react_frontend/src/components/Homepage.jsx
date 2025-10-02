@@ -1,50 +1,22 @@
 // src/components/Homepage.jsx
-import React, { useState, useEffect } from 'react'
- import './Homepage.css' // optional for debugging
-import logoImage from '../assets/logo-black.png' // optional for debugging
-import { useNavigate, useNavigationType } from 'react-router-dom'
+import React, { useState, useEffect } from 'react';
+import './Homepage.css';
+import Navbar from './Navbar'; // Import the new Navbar component
 
 function Homepage() {
-  const [backendMessage, setBackendMessage] = useState('Loading...')
-  
-  let navigate
-  try {
-    navigate = useNavigate()
-  } catch (e) {
-    navigate = null
-  }
+  const [backendMessage, setBackendMessage] = useState('Loading...');
 
   // Fetch from backend safely
   useEffect(() => {
     fetch('http://localhost:5000')
       .then((res) => res.text())
       .then((data) => setBackendMessage(data))
-      .catch((err) => setBackendMessage('Error: ' + err))
-  }, [])
-
-  // Safe navigation function
-  const safeNavigate = (path) => {
-    if (navigate) navigate(path)
-    else console.log('Navigation attempted to', path, 'but no Router is set up.')
-  }
+      .catch((err) => setBackendMessage('Error: ' + err));
+  }, []);
 
   return (
     <div className="homepage">
-      <nav className="navbar">
-        <div className="navbar-left">
-          { <img src={logoImage} alt="Logo" className="logo-image" /> }
-          <h1 className="logo-text">Invest & Track</h1>
-        </div>
-
-        <div className="navbar-right">
-          <button className="nav-button" onClick={() => safeNavigate('/signin')}>
-            Sign In
-          </button>
-          <button className="nav-button" onClick={() => safeNavigate('/create-account')}>
-            Create Account
-          </button>
-        </div>
-      </nav>
+      <Navbar /> {/* Use the new Navbar component */}
 
       <header>
         <h2>
@@ -69,7 +41,7 @@ function Homepage() {
         <p>{backendMessage}</p>
       </section>
     </div>
-  )
+  );
 }
 
-export default Homepage
+export default Homepage;

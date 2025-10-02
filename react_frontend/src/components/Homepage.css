@@ -1,62 +1,7 @@
 /* src/components/Homepage.css */
 .homepage {
   font-family: Arial, sans-serif;
-  padding-top: 70px; /* ensure content is below navbar */
-}
-
-/* Navbar */
-.navbar {
-  display: flex;
-  justify-content: space-between; /* logo left, buttons right */
-  align-items: center;
-  background-color: #000;
-  padding: 0 2rem;
-  width: 100%;
-  height: 60px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: 1000;
-  box-sizing: border-box;
-}
-
-/* Navbar left: logo image + text */
-.navbar-left {
-  display: flex;
-  align-items: center;
-}
-
-.logo-image {
-  height: 40px; /* adjust the size of your logo */
-  width: auto;
-  margin-right: 0.5rem; /* space between logo and text */
-}
-
-.logo-text {
-  color: #0d6efd; /* blue text */
-  font-size: 1.8rem;
-  font-weight: bold;
-  line-height: 1; /* vertically center with image */
-  margin: 0;
-}
-
-/* Buttons on the right */
-.navbar-right {
-  display: flex;
-  align-items: center;
-}
-
-.navbar-right .nav-button {
-  background: none;
-  border: none;
-  color: #ccc;
-  font-size: 1rem;
-  margin-left: 1rem;
-  cursor: pointer;
-}
-
-.navbar-right .nav-button:hover {
-  color: #fff;
+  padding-top: 70px; 
 }
 
 /* Page header */
