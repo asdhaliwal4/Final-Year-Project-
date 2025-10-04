@@ -82,3 +82,14 @@ input:focus {
 .submit-button:hover {
   background-color: #0b5ed7;
 }
+
+/* Style for the error message */
+.error-message {
+  color: #D8000C;
+  background-color: #FFD2D2;
+  border: 1px solid #D8000C;
+  padding: 10px;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  text-align: center;
+}

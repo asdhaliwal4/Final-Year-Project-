@@ -1,11 +1,12 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import mysql from "mysql2/promise"; // Import the mysql2 library
+import mysql from "mysql2/promise";
+import bcrypt from "bcrypt"; // Import bcrypt for password hashing
 
 dotenv.config();
 
-// Database Connection 
+// Database Connection
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -23,11 +24,11 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-
+// API Routes
 
 // Root route
 app.get("/", (req, res) => {
-  res.send("✅ Node backend is running!");
+  res.send("Node backend is running!");
 });
 
 // Test API route to check the database connection
@@ -41,12 +42,73 @@ app.get("/api/db-test", async (req, res) => {
   } catch (error) {
     console.error("Database connection failed:", error);
     res.status(500).json({
-      message: " Database connection failed.",
+      message: "Database connection failed.",
       error: error.message,
       success: false,
     });
   }
 });
+
+// User Registration Route with Full Validation
+app.post("/api/register", async (req, res) => {
+  try {
+    const { first_name, last_name, date_of_birth, email, password } = req.body;
+
+    //Server-Side Validation
+
+    //Checks for missing fields
+    if (!first_name || !last_name || !email || !password || !date_of_birth) {
+      return res.status(400).json({ message: "All fields are required." });
+    }
+
+    //Email Format Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Invalid email format.' });
+    }
+
+    //Age Validation (must be 18 or older)
+    const today = new Date();
+    const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+    const birthDate = new Date(date_of_birth);
+
+    if (birthDate > eighteenYearsAgo) {
+      return res.status(400).json({ message: 'You must be at least 18 years old.' });
+    }
+
+    // end validation 
+
+
+    // hash the password for security
+    const hashedPassword = await bcrypt.hash(password, 10); // 10 is the salt rounds
+
+    // SQL query to insert a new user
+    const sql = `
+      INSERT INTO users (first_name, last_name, date_of_birth, email, password)
+      VALUES (?, ?, ?, ?, ?)
+    `;
+    const values = [first_name, last_name, date_of_birth, email, hashedPassword];
+
+    // Execute the query
+    const [result] = await pool.query(sql, values);
+
+    res.status(201).json({
+      message: "User created successfully!",
+      userId: result.insertId,
+    });
+  } catch (error) {
+    // Check for duplicate email error
+    if (error.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ message: "Email already exists." });
+    }
+    console.error("Registration error:", error);
+    res.status(500).json({
+      message: "Error registering user.",
+      error: error.message,
+    });
+  }
+});
+
 
 // Example API route to get all users from a 'users' table
 app.get("/api/users", async (req, res) => {
