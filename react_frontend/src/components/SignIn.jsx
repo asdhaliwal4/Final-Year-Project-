@@ -2,9 +2,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
-import './CreateAccount.css'; // Reuse the same CSS for the form
+import './CreateAccount.css'; // Reusing the same CSS
 
-function SignIn() {
+function SignIn({ handleLogin }) { 
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -36,9 +36,10 @@ function SignIn() {
       }
 
       console.log('Sign in successful:', result);
-      alert('Sign in successful!');
-      // Redirect to a dashboard or homepage after login
-      navigate('/dashboard'); 
+      // Call the handleLogin function passed from App.jsx
+      handleLogin(result.user);
+      // Redirect to the dashboard
+      navigate('/dashboard');
     } catch (error) {
       console.error('Sign in error:', error);
       setError(error.message);

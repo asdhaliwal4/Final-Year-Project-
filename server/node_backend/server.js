@@ -154,7 +154,7 @@ app.post("/api/login", async (req, res) => {
 });
 
 
-// Example API route to get all users from a 'users' table
+// Example API route to get all users from the 'users' table
 app.get("/api/users", async (req, res) => {
   try {
     const [users] = await pool.query("SELECT * FROM users");

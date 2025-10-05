@@ -1,12 +1,12 @@
 // src/components/Homepage.jsx
 import React, { useState, useEffect } from 'react';
 import './Homepage.css';
-import Navbar from './Navbar'; // Import the new Navbar component
+import Navbar from './Navbar'; // Import Navbar 
 
-function Homepage() {
+function Homepage({ user, handleLogout }) { // Accept user and handleLogout as props
   const [backendMessage, setBackendMessage] = useState('Loading...');
 
-  // Fetch from backend safely
+  
   useEffect(() => {
     fetch('http://localhost:5000')
       .then((res) => res.text())
@@ -16,7 +16,8 @@ function Homepage() {
 
   return (
     <div className="homepage">
-      <Navbar /> {/* Use the new Navbar component */}
+      {/* Pass the props down to the Navbar */}
+      <Navbar user={user} handleLogout={handleLogout} />
 
       <header>
         <h2>

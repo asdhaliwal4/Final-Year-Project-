@@ -5,20 +5,7 @@ import Homepage from './components/Homepage';
 import SignIn from './components/SignIn';
 import CreateAccount from './components/CreateAccount';
 import Navbar from './components/Navbar'; // Import Navbar here to pass props
-
-// Placeholder for the page users see after logging in
-function Dashboard({ user, handleLogout }) {
-  return (
-    <div>
-      <Navbar user={user} handleLogout={handleLogout} />
-      <div style={{ padding: '80px 20px' }}>
-        <h1>Dashboard</h1>
-        <p>Welcome, {user.first_name}!</p>
-        <p>This page is only visible when you are logged in.</p>
-      </div>
-    </div>
-  );
-}
+import Dashboard from './components/Dashboard';
 
 function App() {
   const [user, setUser] = useState(null); // State to hold logged-in user info
