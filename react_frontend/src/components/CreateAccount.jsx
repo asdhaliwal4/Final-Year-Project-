@@ -1,7 +1,7 @@
 // src/components/CreateAccount.jsx
 import React, { useState } from 'react';
 import './CreateAccount.css';
-import Navbar from './Navbar'; // Import the Navbar component
+import Navbar from './Navbar'; // Import Navbar component
 
 function CreateAccount() {
   const [formData, setFormData] = useState({

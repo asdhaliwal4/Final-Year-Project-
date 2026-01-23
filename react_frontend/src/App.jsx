@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Homepage from './components/Homepage';
 import SignIn from './components/SignIn';
 import CreateAccount from './components/CreateAccount';
-import Navbar from './components/Navbar'; // Import Navbar here to pass props
+import Navbar from './components/Navbar'; 
 import Dashboard from './components/Dashboard';
 
 function App() {

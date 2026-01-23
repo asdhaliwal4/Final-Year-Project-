@@ -16,6 +16,7 @@
 
 /* Navbar left: logo image + text */
 .navbar-left {
+  
   display: flex;
   align-items: center;
 }
