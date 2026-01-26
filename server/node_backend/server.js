@@ -7,6 +7,7 @@ import axios from "axios";
 
 dotenv.config();
 
+// Setting up the connection to our XAMPP database
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -20,22 +21,32 @@ const pool = mysql.createPool({
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// --- IMPORTANT: ROBUST CORS SETTINGS ---
+// Letting our Vite frontend talk to this backend without issues
 app.use(cors({
-  origin: "http://localhost:5173", // Your Vite frontend URL
+  origin: "http://localhost:5173",
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
 
 app.use(express.json());
 
-// API Routes
-
+// Just a quick check to see if the server is actually alive
 app.get("/", (req, res) => {
   res.send("Node backend is running!");
 });
 
-// User Registration
+// Making sure our code can actually "talk" to the MySQL database
+app.get("/api/db-test", async (req, res) => {
+  try {
+    const [rows] = await pool.query("SELECT 1");
+    res.json({ message: "Database connection successful!", success: true });
+  } catch (error) {
+    console.error("Database connection failed:", error);
+    res.status(500).json({ message: "Database connection failed.", error: error.message, success: false });
+  }
+});
+
+// Handling new user signups and hashing their passwords
 app.post("/api/register", async (req, res) => {
   try {
     const { first_name, last_name, date_of_birth, email, password } = req.body;
@@ -48,7 +59,7 @@ app.post("/api/register", async (req, res) => {
   }
 });
 
-// User Login
+// Checking credentials so users can log in
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -67,67 +78,7 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// --- UPDATED PORTFOLIO ROUTE ---
-app.get("/api/portfolio/:userId", async (req, res) => {
-  try {
-    const { userId } = req.params;
-    const [assets] = await pool.query("SELECT * FROM assets WHERE user_id = ?", [userId]);
-
-    const portfolioWithPrices = await Promise.all(assets.map(async (asset) => {
-      try {
-        const response = await axios.get(`https://finnhub.io/api/v1/quote`, {
-          params: { symbol: asset.symbol, token: process.env.FINNHUB_API_KEY }
-        });
-
-        const currentPrice = response.data.c || 0;
-        return {
-          ...asset,
-          current_price: currentPrice,
-          total_value: (currentPrice * asset.quantity).toFixed(2),
-          gain_loss: ((currentPrice - asset.purchase_price) * asset.quantity).toFixed(2)
-        };
-      } catch (err) {
-        // Return asset with 0 price if API fails for one symbol
-        return { ...asset, current_price: 0, total_value: 0, gain_loss: 0 };
-      }
-    }));
-
-    res.json(portfolioWithPrices);
-  } catch (error) {
-    console.error("Fetch Error:", error);
-    res.status(500).json({ message: "Database error", details: error.message });
-  }
-});
-
-// Add Asset
-app.post("/api/assets/add", async (req, res) => {
-  try {
-    const { user_id, symbol, quantity, purchase_price } = req.body;
-    const sql = `INSERT INTO assets (user_id, symbol, quantity, purchase_price) VALUES (?, ?, ?, ?)`;
-    await pool.query(sql, [user_id, symbol.toUpperCase(), quantity, purchase_price]);
-    res.status(201).json({ message: "Asset added!" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-});
-
-app.delete("/api/assets/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const sql = "DELETE FROM assets WHERE id = ?";
-    await pool.query(sql, [id]);
-    res.status(200).json({ message: "Asset removed successfully" });
-  } catch (error) {
-    console.error("Delete error:", error);
-    res.status(500).json({ message: "Error removing asset" });
-  }
-});
-
-
+// Grabbing the user's stocks and getting fresh prices from Finnhub
 app.get("/api/portfolio/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -139,7 +90,6 @@ app.get("/api/portfolio/:userId", async (req, res) => {
         const response = await axios.get(`https://finnhub.io/api/v1/quote`, {
           params: { symbol: symbol, token: process.env.FINNHUB_API_KEY }
         });
-
         const currentPrice = response.data.c || 0;
         return {
           ...asset,
@@ -157,36 +107,58 @@ app.get("/api/portfolio/:userId", async (req, res) => {
   }
 });
 
+// Adding a new stock to the user's collection
+app.post("/api/assets/add", async (req, res) => {
+  try {
+    const { user_id, symbol, quantity, purchase_price } = req.body;
+    const sql = `INSERT INTO assets (user_id, symbol, quantity, purchase_price) VALUES (?, ?, ?, ?)`;
+    await pool.query(sql, [user_id, symbol.toUpperCase(), quantity, purchase_price]);
+    res.status(201).json({ message: "Asset added!" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-// Search for stocks
+// Dropping a stock from the portfolio
+app.delete("/api/assets/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const sql = "DELETE FROM assets WHERE id = ?";
+    await pool.query(sql, [id]);
+    res.status(200).json({ message: "Asset removed successfully" });
+  } catch (error) {
+    console.error("Delete error:", error);
+    res.status(500).json({ message: "Error removing asset" });
+  }
+});
+
+// Searching for stock symbols via the Finnhub API
 app.get("/api/search", async (req, res) => {
   try {
     const { q } = req.query;
     const response = await axios.get(`https://finnhub.io/api/v1/search`, {
-      params: {
-        q: q,
-        token: process.env.FINNHUB_API_KEY
-      }
+      params: { q: q, token: process.env.FINNHUB_API_KEY }
     });
     res.json(response.data.result || []);
   } catch (error) {
-    console.error("Search error:", error);
     res.status(500).json({ message: "Error searching for stocks." });
   }
 });
 
-// Get a single quote for a symbol
+// Getting a single price quote for the search feature
 app.get("/api/quote/:symbol", async (req, res) => {
   try {
     const { symbol } = req.params;
     const response = await axios.get(`https://finnhub.io/api/v1/quote`, {
-      params: {
-        symbol: symbol.toUpperCase(),
-        token: process.env.FINNHUB_API_KEY
-      }
+      params: { symbol: symbol.toUpperCase(), token: process.env.FINNHUB_API_KEY }
     });
     res.json(response.data);
   } catch (error) {
     res.status(500).json({ message: "Error fetching price." });
   }
+});
+
+// Fire up the server! Always keep this at the bottom
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
 });
