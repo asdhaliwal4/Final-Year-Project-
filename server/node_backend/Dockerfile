@@ -1,14 +1,15 @@
-# Use a standard Node.js image
+# Use the official Node.js image
 FROM node:20
 
-# Set the folder inside the container
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy  package files and install dependencies
+# Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
 
-# Copy all  backend code into the container
+# Copy all your backend code
 COPY . .
 
+# IMPORTANT: Use 'node' instead of 'nodemon' for production
 CMD ["node", "server.js"]
