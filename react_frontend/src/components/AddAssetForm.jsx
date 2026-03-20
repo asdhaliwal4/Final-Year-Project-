@@ -15,7 +15,7 @@ function AddAssetForm({ user, prefillSymbol = "", onComplete }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:5000/api/assets/add', {
+      const response = await fetch('https://final-year-project-iaod.onrender.com/api/assets/add', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, user_id: user.id }),

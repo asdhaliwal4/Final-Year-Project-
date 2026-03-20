@@ -7,7 +7,7 @@ function StockSearch({ onSelectStock }) {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (query.length > 1) {
-        fetch(`http://localhost:5000/api/search?q=${query}`)
+        fetch(`https://final-year-project-iaod.onrender.com/api/search?q=${query}`)
           .then(res => res.json())
           .then(data => setResults(data));
       } else {
