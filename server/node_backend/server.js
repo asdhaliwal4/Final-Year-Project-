@@ -7,35 +7,49 @@ import axios from "axios";
 
 dotenv.config();
 
-// Setting up the connection to our XAMPP database
+// Setting up the connection to the database
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  port: process.env.DB_PORT || 3306, 
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  // AIVEN
+  ssl: {
+    rejectUnauthorized: false
+  }
 });
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Letting our Vite frontend talk to this backend without issues
+const allowedOrigins = ["http://localhost:5173", "https://your-frontend-url.onrender.com"];
+
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: function (origin, callback) {
+    // allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) === -1) {
+      return callback(null, true); // For now, allow all during testing, or replace with logic
+    }
+    return callback(null, true);
+  },
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
 
 app.use(express.json());
 
-// Just a quick check to see if the server is actually alive
+//check to see if the server is actually alive
 app.get("/", (req, res) => {
   res.send("Node backend is running!");
 });
 
-// Making sure our code can actually "talk" to the MySQL database
+// Making sure the code can talk to the MySQL database
 app.get("/api/db-test", async (req, res) => {
   try {
     const [rows] = await pool.query("SELECT 1");
