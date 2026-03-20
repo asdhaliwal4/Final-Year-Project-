@@ -1,7 +1,14 @@
-FROM node:18
+# Use a standard Node.js image
+FROM node:20
+
+# Set the folder inside the container
 WORKDIR /app
+
+# Copy  package files and install dependencies
 COPY package*.json ./
 RUN npm install
+
+# Copy all  backend code into the container
 COPY . .
-EXPOSE 5000
-CMD ["npm", "run", "dev"]
+
+CMD ["node", "server.js"]
