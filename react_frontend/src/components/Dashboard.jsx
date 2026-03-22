@@ -42,7 +42,7 @@ function Dashboard({ user, handleLogout }) {
   const handleDelete = async (assetId) => {
     if (window.confirm("Are you sure you want to remove this asset?")) {
       try {
-        const response = await fetch(`http://localhost:5000/api/assets/${assetId}`, {
+        const response = await fetch(`https://final-year-project-iaod.onrender.com/api/assets/${assetId}`, {
           method: 'DELETE',
         });
         if (response.ok) fetchPortfolio(); // Refresh table immediately
