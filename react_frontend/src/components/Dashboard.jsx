@@ -20,7 +20,7 @@ function Dashboard({ user, handleLogout }) {
 
   const fetchPortfolio = useCallback(() => {
     setLoading(true);
-    fetch(`http://localhost:5000/api/portfolio/${user.id}`)
+    fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/${user.id}`)
       .then((res) => {
         if (!res.ok) throw new Error('Failed to fetch portfolio');
         return res.json();
