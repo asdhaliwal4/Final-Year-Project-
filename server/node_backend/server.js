@@ -26,9 +26,11 @@ const pool = mysql.createPool({
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Letting our Vite frontend talk to this backend without issues
-const allowedOrigins = ["http://localhost:5173", "https://your-frontend-url.onrender.com"];
-
+// Letting Vite frontend talk to this backend without issues
+const allowedOrigins = [
+  "http://localhost:5173", 
+  "https://final-year-frontend-e5gb.onrender.com"
+];
 app.use(cors({
   origin: function (origin, callback) {
     // allow requests with no origin (like mobile apps or curl requests)
