@@ -20,7 +20,7 @@ function SignIn({ handleLogin }) {
     e.preventDefault();
     setError('');
 
-    try {
+try {
       const response = await fetch('https://final-year-project-iaod.onrender.com/api/login', {
         method: 'POST',
         headers: {
