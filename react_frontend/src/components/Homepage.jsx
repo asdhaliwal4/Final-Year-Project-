@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import './Homepage.css';
+import React, { useState } from 'react';
 import Navbar from './Navbar';
 import StockSearch from './StockSearch';
 import AddAssetForm from './AddAssetForm';
 import { useNavigate } from 'react-router-dom';
+import './Homepage.css';
 
 function Homepage({ user, handleLogout }) {
   const [selectedStock, setSelectedStock] = useState(null);
@@ -12,9 +12,9 @@ function Homepage({ user, handleLogout }) {
 
   const handleSelectStock = (symbol) => {
     setSelectedStock(symbol);
-    fetch(`http://localhost:5000/api/quote/${symbol}`)
+    fetch(`https://final-year-project-iaod.onrender.com/api/quote/${symbol}`)
       .then(res => res.json())
-      .then(data => setStockPrice(data.c)) // 'c' is the current price
+      .then(data => setStockPrice(data.c))
       .catch(err => console.error(err));
   };
 
@@ -22,38 +22,32 @@ function Homepage({ user, handleLogout }) {
     <div className="homepage">
       <Navbar user={user} handleLogout={handleLogout} />
 
-      <header>
-        <h1>Smart Portfolio Management</h1>
-        <p>Track your investments and manage your assets efficiently.</p>
+      <header className="hero">
+        <h1>Invest & Track</h1>
+        <p>Real-time portfolio management for stocks and crypto.</p>
         
-        {/* New Search Section */}
-        <div className="search-section">
+        <div className="search-box">
           <StockSearch onSelectStock={handleSelectStock} />
         </div>
 
         {selectedStock && (
-          <div className="stock-details-card">
+          <div className="selection-modal">
             <h3>{selectedStock}</h3>
-            <p className="live-price">Current Price: ${stockPrice || 'Loading...'}</p>
+            <p className="price-highlight">Live Price: ${stockPrice || '...'}</p>
             {user ? (
               <AddAssetForm 
                 user={user} 
                 prefillSymbol={selectedStock} 
-                onComplete={() => {
-                  setSelectedStock(null);
-                  alert("Successfully added to your portfolio!");
-                }} 
+                onComplete={() => setSelectedStock(null)} 
               />
             ) : (
-              <button className="signin-prompt-btn" onClick={() => navigate('/signin')}>
-                Sign in to Add Asset
+              <button className="login-btn" onClick={() => navigate('/signin')}>
+                Sign in to add to portfolio
               </button>
             )}
           </div>
         )}
       </header>
-
-      {/* Your existing sections below... */}
     </div>
   );
 }
