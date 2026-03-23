@@ -21,16 +21,16 @@ function AddAssetForm({ user, prefillSymbol, onComplete }) {
     try {
       console.log("Sending asset data:", { ...formData, user_id: user.id });
       
-      const response = await fetch('https://final-year-project-iaod.onrender.com/api/assets', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          user_id: user.id,
-          symbol: formData.symbol,
-          quantity: formData.quantity,
-          purchase_price: formData.purchase_price
-        }),
-      });
+      const response = await fetch('https://final-year-project-iaod.onrender.com/api/assets/add', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ 
+    user_id: user.id,
+    symbol: formData.symbol,
+    quantity: formData.quantity,
+    purchase_price: formData.purchase_price
+  }),
+});
 
       const result = await response.json();
 

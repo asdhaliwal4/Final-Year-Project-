@@ -174,7 +174,6 @@ app.get("/api/quote/:symbol", async (req, res) => {
   }
 });
 
-// Fire up the server! Always keep this at the bottom
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
