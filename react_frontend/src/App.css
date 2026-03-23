@@ -1,13 +1,13 @@
-/* Using 'Inter' for that clean fintech look */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap');
 
 :root {
   --primary: #3b82f6;
-  --bg-dark: #0f172a;
+  --bg-dark: #0b1120;
   --glass: rgba(255, 255, 255, 0.03);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.08);
   --text: #f8fafc;
   --text-dim: #94a3b8;
+  --success: #10b981;
 }
 
 * {
@@ -21,124 +21,107 @@ body {
   background: radial-gradient(circle at top right, #1e293b, var(--bg-dark));
   color: var(--text);
   min-height: 100vh;
-  overflow-x: hidden;
 }
 
-/* My main layout container */
 #root {
   width: 100%;
-  margin: 0;
-  padding: 0;
 }
 
-/* Fixing the nav bar to the top with a blur effect */
-.navbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.2rem 6%;
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--glass-border);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-}
-
-.nav-links {
-  display: flex;
-  gap: 2.5rem;
-  align-items: center;
-}
-
-.nav-links a {
-  text-decoration: none;
-  color: var(--text-dim);
-  font-weight: 500;
-  font-size: 0.95rem;
-  transition: 0.3s ease;
-}
-
-.nav-links a:hover {
-  color: var(--primary);
-}
-
-/* Making the logout button stand out */
-.logout-btn {
-  background: var(--primary);
-  color: white !important;
-  padding: 0.6rem 1.4rem;
-  border-radius: 10px;
-  font-weight: 600;
-  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
-}
-
-/* Big hero section for the home page */
+/* My clean hero section */
 .hero {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 120px 20px;
+  padding: 100px 20px;
 }
 
 .hero h1 {
-  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-size: clamp(3rem, 10vw, 5rem);
   font-weight: 800;
-  letter-spacing: -2px;
-  background: linear-gradient(to bottom, #fff, #94a3b8);
+  letter-spacing: -3px;
+  /* Nice gradient for the main title */
+  background: linear-gradient(to bottom, #ffffff 30%, #94a3b8 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .hero p {
   color: var(--text-dim);
-  font-size: 1.2rem;
-  max-width: 650px;
-  line-height: 1.7;
+  font-size: 1.25rem;
+  max-width: 600px;
+  line-height: 1.6;
 }
 
-/* The search bar style */
+/* Style for my search box */
 .search-box {
-  margin-top: 3.5rem;
+  margin-top: 3rem;
   width: 100%;
-  max-width: 550px;
+  max-width: 500px;
 }
 
 .search-box input {
   width: 100%;
-  padding: 18px 28px;
+  padding: 18px 24px;
   background: var(--glass);
   border: 1px solid var(--glass-border);
   border-radius: 16px;
   color: white;
   font-size: 1.1rem;
-  transition: 0.4s;
   outline: none;
+  transition: 0.3s;
 }
 
 .search-box input:focus {
   border-color: var(--primary);
-  background: rgba(255, 255, 255, 0.07);
-  box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.1);
 }
 
-/* Simple transition for page loading */
-.fade-in {
-  animation: fadeIn 0.8s ease-in;
+/* Dashboard card styles */
+.portfolio-card {
+  background: white; /* I'm keeping this white like your screenshot but rounding it more */
+  padding: 2.5rem;
+  border-radius: 24px;
+  margin: 2rem 0;
+  color: #0f172a;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+.portfolio-card h2 {
+  font-size: 1rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
-/* I'm adding this to the bottom to force a visible change */
-.hero h1 {
-  color: #00ff00 !important; /* Neon Green */
-  font-size: 150px !important;  /* Making it huge */
-  background: none !important;  /* Removing any gradients I added earlier */
-  -webkit-text-fill-color: #00ff00 !important; 
-  border: 10px solid red !important; /* Red box around it just to be sure */
+.portfolio-value {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--primary);
 }
+
+/* Making the table look pro */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 2rem;
+  background: var(--glass);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+th {
+  text-align: left;
+  padding: 1rem;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--glass-border);
+}
+
+td {
+  padding: 1.2rem 1rem;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.gain { color: var(--success); }
+.remove-link { color: #ef4444; text-decoration: none; cursor: pointer; }
