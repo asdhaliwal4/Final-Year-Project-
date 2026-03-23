@@ -4,6 +4,7 @@ import StockSearch from './StockSearch';
 import AddAssetForm from './AddAssetForm';
 import { useNavigate } from 'react-router-dom';
 import './Homepage.css';
+import '../App.css'; 
 
 function Homepage({ user, handleLogout }) {
   const [selectedStock, setSelectedStock] = useState(null);
