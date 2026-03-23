@@ -2,7 +2,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
-import './CreateAccount.css'; // Reusing the same CSS
+import '../App.css'; // I need this for the global glass styles
+import './CreateAccount.css'; 
 
 function SignIn({ handleLogin }) { 
   const [formData, setFormData] = useState({
@@ -16,11 +17,12 @@ function SignIn({ handleLogin }) {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // I'm sending my login info to my Render backend here
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-try {
+    try {
       const response = await fetch('https://final-year-project-iaod.onrender.com/api/login', {
         method: 'POST',
         headers: {
@@ -35,50 +37,64 @@ try {
         throw new Error(result.message || 'Failed to sign in.');
       }
 
-      console.log('Sign in successful:', result);
-      // Call the handleLogin function passed from App.jsx
+      console.log('Login worked:', result);
       handleLogin(result.user);
-      // Redirect to the dashboard
-      navigate('/dashboard');
+      navigate('/dashboard'); // Taking me to the dashboard once I'm in
     } catch (error) {
-      console.error('Sign in error:', error);
+      console.error('Login error:', error);
       setError(error.message);
     }
   };
 
   return (
-    <div className="create-account-page">
+    <div className="auth-page fade-in">
       <Navbar />
-      <div className="form-container">
-        <h1>Sign In</h1>
-        <form onSubmit={handleSubmit}>
-          {error && <p className="error-message">{error}</p>}
+      
+      <main className="auth-container">
+        {/* My glassmorphism form card */}
+        <div className="auth-card">
+          <h1>Welcome Back</h1>
+          <p className="auth-subtitle">Sign in to manage your portfolio</p>
 
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+          <form onSubmit={handleSubmit} className="auth-form">
+            {error && <div className="error-box">{error}</div>}
 
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
+            <div className="input-group">
+              <label htmlFor="email">Email Address</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="name@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <button type="submit" className="submit-button">
-            Sign In
-          </button>
-        </form>
-      </div>
+            <div className="input-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <button type="submit" className="auth-submit-btn">
+              Sign In
+            </button>
+          </form>
+
+          <p className="auth-footer">
+            Don't have an account? <span onClick={() => navigate('/create-account')}>Create one</span>
+          </p>
+        </div>
+      </main>
     </div>
   );
 }

@@ -1,7 +1,9 @@
 // src/components/CreateAccount.jsx
 import React, { useState } from 'react';
-import './CreateAccount.css';
-import Navbar from './Navbar'; // Import Navbar component
+import { useNavigate } from 'react-router-dom';
+import Navbar from './Navbar';
+import '../App.css'; // I need this to see my global glass styles
+import './CreateAccount.css'; 
 
 function CreateAccount() {
   const [formData, setFormData] = useState({
@@ -11,8 +13,9 @@ function CreateAccount() {
     email: '',
     password: '',
   });
-  // New state to hold validation error messages
+  
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -20,30 +23,26 @@ function CreateAccount() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(''); // Clear previous errors on a new submission
+    setError(''); 
 
-    // Client-Side Validation 
-
-    // Email Format Validation
+    // I'm checking if the email looks legit first
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setError('Invalid email format. Please enter a valid email.');
-      return; // Stop the form submission
+      return; 
     }
 
-    //Age Validation - must be 18 or older
+    // Making sure they are at least 18 before letting them in
     const today = new Date();
     const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
     const birthDate = new Date(formData.date_of_birth);
 
     if (birthDate > eighteenYearsAgo) {
       setError('You must be at least 18 years old to create an account.');
-      return; // Stop the form submission
+      return; 
     }
 
-    //  End Validation 
-
-try {
+    try {
       const response = await fetch('https://final-year-project-iaod.onrender.com/api/register', {
         method: 'POST',
         headers: {
@@ -55,86 +54,107 @@ try {
       const result = await response.json();
 
       if (!response.ok) {
-        // Use the error message from the backend if available
         throw new Error(result.message || 'Network response was not ok');
       }
 
-      console.log('Account created successfully:', result);
+      console.log('Account created!', result);
       alert('Account created successfully!');
-      // redirect the user after successful registration
-      // navigate('/signin');
+      
+      // I'm sending them to the sign-in page now that they are registered
+      navigate('/signin');
     } catch (error) {
       console.error('Error creating account:', error);
-      // Display the error message from the backend or a generic one
       setError(error.message || 'Failed to create account. Please try again.');
     }
   };
 
   return (
-    <div className="create-account-page">
+    <div className="auth-page fade-in">
       <Navbar />
 
-      <div className="form-container">
-        <h1>Create Account</h1>
-        <form onSubmit={handleSubmit}>
-          {/* Element to display validation errors */}
-          {error && <p className="error-message">{error}</p>}
+      <main className="auth-container">
+        {/* My glassmorphism registration card */}
+        <div className="auth-card">
+          <h1>Join Invest & Track</h1>
+          <p className="auth-subtitle">Start managing your portfolio today</p>
 
-          <label htmlFor="first_name">First Name</label>
-          <input
-            type="text"
-            id="first_name"
-            name="first_name"
-            value={formData.first_name}
-            onChange={handleChange}
-            required
-          />
+          <form onSubmit={handleSubmit} className="auth-form">
+            {error && <div className="error-box">{error}</div>}
 
-          <label htmlFor="last_name">Last Name</label>
-          <input
-            type="text"
-            id="last_name"
-            name="last_name"
-            value={formData.last_name}
-            onChange={handleChange}
-            required
-          />
+            <div className="input-row">
+              <div className="input-group">
+                <label htmlFor="first_name">First Name</label>
+                <input
+                  type="text"
+                  id="first_name"
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
 
-          <label htmlFor="date_of_birth">Date of Birth</label>
-          <input
-            type="date"
-            id="date_of_birth"
-            name="date_of_birth"
-            value={formData.date_of_birth}
-            onChange={handleChange}
-            required
-          />
+              <div className="input-group">
+                <label htmlFor="last_name">Last Name</label>
+                <input
+                  type="text"
+                  id="last_name"
+                  name="last_name"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
 
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
+            <div className="input-group">
+              <label htmlFor="date_of_birth">Date of Birth</label>
+              <input
+                type="date"
+                id="date_of_birth"
+                name="date_of_birth"
+                value={formData.date_of_birth}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
+            <div className="input-group">
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                placeholder="name@example.com"
+                value={formData.email}
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <button type="submit" className="submit-button">
-            Sign Up
-          </button>
-        </form>
-      </div>
+            <div className="input-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <button type="submit" className="auth-submit-btn">
+              Create My Account
+            </button>
+          </form>
+
+          <p className="auth-footer">
+            Already have an account? <span onClick={() => navigate('/signin')}>Sign in</span>
+          </p>
+        </div>
+      </main>
     </div>
   );
 }

@@ -1,42 +1,46 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import '../App.css'; // I need this for my global theme
 import './Navbar.css';
 import logoImage from '../assets/logo-black.png';
 
 function Navbar({ user, handleLogout }) {
   const navigate = useNavigate();
 
+  // I'm handling the logout and sending them back to the start
   const onLogout = () => {
     handleLogout();
     navigate('/');
   };
 
   return (
-    <nav className="navbar">
-      <div className="navbar-left" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-        <img src={logoImage} alt="Logo" className="logo-image" />
-        <h1 className="logo-text">Invest & Track</h1>
+    <nav className="navbar fade-in">
+      {/* My logo area on the left */}
+      <div className="navbar-left" onClick={() => navigate('/')}>
+        <img src={logoImage} alt="Logo" className="nav-logo" />
+        <span className="brand-name">Invest & Track</span>
       </div>
+
       <div className="navbar-right">
         {user ? (
-          <>
-            <button className="nav-button" onClick={() => navigate('/dashboard')}>
+          <div className="nav-user-controls">
+            <button className="nav-link-btn" onClick={() => navigate('/dashboard')}>
               Dashboard
             </button>
-            <span style={{ color: '#ccc', margin: '0 1rem' }}>Welcome, {user.first_name}</span>
-            <button className="nav-button" onClick={onLogout}>
+            <span className="welcome-text">Hi, {user.first_name}</span>
+            <button className="logout-action-btn" onClick={onLogout}>
               Logout
             </button>
-          </>
+          </div>
         ) : (
-          <>
-            <button className="nav-button" onClick={() => navigate('/signin')}>
+          <div className="nav-auth-links">
+            <button className="nav-link-btn" onClick={() => navigate('/signin')}>
               Sign In
             </button>
-            <button className="nav-button" onClick={() => navigate('/create-account')}>
+            <button className="signup-highlight-btn" onClick={() => navigate('/create-account')}>
               Create Account
             </button>
-          </>
+          </div>
         )}
       </div>
     </nav>

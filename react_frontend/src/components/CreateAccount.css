@@ -1,95 +1,151 @@
-/* src/components/CreateAccount.css */
-
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-.create-account-page {
-  display: flex;
-  justify-content: center; /* center horizontally */
-  align-items: center; /* center vertically */
-  height: 100vh; /* full screen height */
-  width: 100vw; /* full screen width */
-  background-color: #f9f9f9;
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  position: fixed; /* fixes positioning issues */
-  top: 0;
-  left: 0;
-}
-
-.form-container {
-  background: #fff;
-  padding: 2.5rem 3rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  width: 90%;
-  max-width: 400px; /* restricts form width */
-  text-align: center;
-}
-
-.form-container h1 {
-  margin-bottom: 1.5rem;
-  color: #0d6efd;
-  font-size: 1.8rem;
-}
-
-/* Form styling */
-form {
+/* I'm using flex to center the login/signup card in the middle of the screen */
+.auth-page {
+  min-height: 100vh;
   display: flex;
   flex-direction: column;
+}
+
+.auth-container {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+/* My main glassmorphism card */
+.auth-card {
+  background: var(--glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  padding: 3rem;
+  border-radius: 24px;
   width: 100%;
+  max-width: 480px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  text-align: center;
 }
 
-label {
-  text-align: left;
+.auth-card h1 {
+  font-size: 2.2rem;
+  font-weight: 800;
   margin-bottom: 0.5rem;
+  letter-spacing: -1px;
+  background: linear-gradient(to bottom, #fff, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.auth-subtitle {
+  color: var(--text-dim);
+  margin-bottom: 2.5rem;
+  font-size: 0.95rem;
+}
+
+.auth-form {
+  text-align: left;
+}
+
+/* Side-by-side layout for First and Last name */
+.input-row {
+  display: flex;
+  gap: 1.2rem;
+}
+
+.input-group {
+  margin-bottom: 1.5rem;
+  flex: 1;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: #333;
+  color: var(--text-dim);
+  margin-bottom: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-input {
-  padding: 0.6rem;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  margin-bottom: 1rem;
+.input-group input {
+  width: 100%;
+  padding: 14px 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  color: white;
   font-size: 1rem;
-}
-
-input:focus {
   outline: none;
-  border-color: #0d6efd;
-  box-shadow: 0 0 3px rgba(13, 110, 253, 0.4);
+  transition: all 0.3s ease;
 }
 
-/* Submit button */
-.submit-button {
-  background-color: #0d6efd;
+/* Changing the border color when I click into a field */
+.input-group input:focus {
+  border-color: var(--primary);
+  background: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
+}
+
+/* My big primary action button */
+.auth-submit-btn {
+  width: 100%;
+  background: var(--primary);
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 0.75rem;
+  padding: 16px;
+  border-radius: 14px;
+  font-weight: 700;
   font-size: 1rem;
   cursor: pointer;
-  transition: background 0.2s ease-in-out;
-  margin-top: 0.5rem;
+  margin-top: 1rem;
+  transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
 }
 
-.submit-button:hover {
-  background-color: #0b5ed7;
+.auth-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+  filter: brightness(1.1);
 }
 
-/* Style for the error message */
-.error-message {
-  color: #D8000C;
-  background-color: #FFD2D2;
-  border: 1px solid #D8000C;
-  padding: 10px;
-  border-radius: 6px;
-  margin-bottom: 1rem;
+/* Red box for when my validation (like the 18+ rule) fails */
+.error-box {
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  padding: 14px;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
   text-align: center;
+  font-weight: 500;
+}
+
+.auth-footer {
+  margin-top: 2rem;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.auth-footer span {
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 5px;
+}
+
+.auth-footer span:hover {
+  text-decoration: underline;
+}
+
+/* Ensuring the name fields stack on top of each other on mobile */
+@media (max-width: 480px) {
+  .input-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .auth-card {
+    padding: 2rem 1.5rem;
+  }
 }
