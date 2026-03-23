@@ -1,80 +1,73 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import '../App.css'; // Global glass styles
+import './AddAssetForm.css';
 
-function AddAssetForm({ user, prefillSymbol = "", onComplete }) {
+function AddAssetForm({ user, prefillSymbol, onComplete }) {
   const [formData, setFormData] = useState({
-    symbol: prefillSymbol,
+    symbol: prefillSymbol || '',
     quantity: '',
-    purchase_price: ''
+    purchase_price: '',
   });
-
-  // This ensures the form updates if you click a different stock on the Homepage
-  useEffect(() => {
-    setFormData((prev) => ({ ...prev, symbol: prefillSymbol }));
-  }, [prefillSymbol]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('https://final-year-project-iaod.onrender.com/api/assets/add', {
+      const response = await fetch('https://final-year-project-iaod.onrender.com/api/assets', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, user_id: user.id }),
       });
 
       if (response.ok) {
-        alert("Asset added successfully!");
-        onComplete(); // Refresh data and close form
-      } else {
-        const result = await response.json();
-        alert(result.message || "Failed to add asset.");
+        onComplete(); // I'm closing the form and refreshing the list
       }
     } catch (err) {
-      console.error("Submission error:", err);
-      alert("Error connecting to server.");
+      console.error("Failed to add asset:", err);
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="add-asset-form">
-      <h3>Add {formData.symbol || 'Asset'}</h3>
-      
-      <div className="form-group">
-        <label>Stock Symbol</label>
-        <input 
-          type="text" 
-          placeholder="e.g. AAPL" 
-          value={formData.symbol} 
-          onChange={(e) => setFormData({...formData, symbol: e.target.value.toUpperCase()})}
-          required 
-        />
-      </div>
+    <div className="add-asset-card fade-in">
+      <h3>Add {formData.symbol} to Portfolio</h3>
+      <form onSubmit={handleSubmit} className="asset-form">
+        <div className="form-row">
+          <div className="input-group">
+            <label>Ticker Symbol</label>
+            <input 
+              type="text" 
+              value={formData.symbol} 
+              readOnly 
+              className="readonly-input"
+            />
+          </div>
+          <div className="input-group">
+            <label>Quantity</label>
+            <input 
+              type="number" 
+              step="any"
+              placeholder="0.00"
+              onChange={(e) => setFormData({...formData, quantity: e.target.value})} 
+              required 
+            />
+          </div>
+        </div>
 
-      <div className="form-group">
-        <label>Quantity</label>
-        <input 
-          type="number" 
-          step="any" 
-          placeholder="Amount bought" 
-          value={formData.quantity} 
-          onChange={(e) => setFormData({...formData, quantity: e.target.value})}
-          required 
-        />
-      </div>
+        <div className="input-group">
+          <label>Purchase Price (per share)</label>
+          <input 
+            type="number" 
+            step="0.01"
+            placeholder="$ 0.00"
+            onChange={(e) => setFormData({...formData, purchase_price: e.target.value})} 
+            required 
+          />
+        </div>
 
-      <div className="form-group">
-        <label>Purchase Price</label>
-        <input 
-          type="number" 
-          step="0.01" 
-          placeholder="Price per share" 
-          value={formData.purchase_price} 
-          onChange={(e) => setFormData({...formData, purchase_price: e.target.value})}
-          required 
-        />
-      </div>
-
-      <button type="submit" className="submit-button">Add to Portfolio</button>
-    </form>
+        <button type="submit" className="add-submit-btn">
+          Confirm Addition
+        </button>
+      </form>
+    </div>
   );
 }
 
