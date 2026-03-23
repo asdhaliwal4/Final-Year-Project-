@@ -142,3 +142,37 @@ td {
 
 .gain { color: var(--success); }
 .remove-link { color: #ef4444; text-decoration: none; cursor: pointer; }
+
+/* Container for the form so I can position the close button */
+.selection-card-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  margin: 2rem auto;
+}
+
+/* My clean 'Cancel' button */
+.close-selection-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-dim);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.2s;
+}
+
+.close-selection-btn:hover {
+  background: #ef4444; /* Turns red when I want to cancel */
+  color: white;
+  border-color: #ef4444;
+  transform: scale(1.1);
+}

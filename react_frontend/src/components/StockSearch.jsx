@@ -35,11 +35,10 @@ function StockSearch({ onSelectStock }) {
     }
   };
 
-  const selectItem = (symbol) => {
-    onSelectStock(symbol);
-    setQuery(symbol); // Fill the box with the choice
-    setShowDropdown(false);
-  };
+const selectItem = (symbol) => {
+  onSelectStock(symbol); // Tell the form we picked TSLA
+  setShowDropdown(false); // Just hide the list, don't clear anything else
+};
 
   return (
     <div className="search-wrapper" ref={searchRef}>

@@ -96,4 +96,14 @@
   transition: 0.3s;
 }
 
-.add-btn.cancel { background: #334155; }
+.add-btn.cancel {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--glass-border);
+  color: var(--text-dim);
+}
+
+.add-btn.cancel:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+}

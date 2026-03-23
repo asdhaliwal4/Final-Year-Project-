@@ -10,70 +10,76 @@ function AddAssetForm({ user, prefillSymbol, onComplete }) {
     purchase_price: '',
   });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.symbol) return alert("Please select a stock symbol first.");
-
-    try {
-      const response = await fetch('https://final-year-project-iaod.onrender.com/api/assets/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, user_id: user.id }),
-      });
-
-      if (response.ok) {
-        alert("Portfolio updated!");
-        onComplete();
-      }
-    } catch (err) {
-      console.error("Add failed:", err);
-    }
-  };
-
   return (
-    <div className="add-asset-card fade-in">
-      <h3>{prefillSymbol ? `Add ${prefillSymbol}` : "Add New Asset"}</h3>
-      <form onSubmit={handleSubmit} className="asset-form">
-        
-        <div className="input-group search-container">
-          <label>Ticker Symbol</label>
-          {/* If I already picked one on the home page, just show it. Otherwise, show search. */}
-          {prefillSymbol ? (
-            <input type="text" value={formData.symbol} readOnly className="readonly-input" />
-          ) : (
-            <StockSearch onSelectStock={(sym) => setFormData({...formData, symbol: sym})} />
-          )}
-        </div>
-
-        <div className="form-row">
-          <div className="input-group">
-            <label>Quantity</label>
-            <input 
-              type="number" 
-              step="any"
-              placeholder="0.00"
-              value={formData.quantity}
-              onChange={(e) => setFormData({...formData, quantity: e.target.value})} 
-              required 
-            />
-          </div>
-          <div className="input-group">
-            <label>Purchase Price</label>
-            <input 
-              type="number" 
-              step="0.01"
-              placeholder="$ 0.00"
-              value={formData.purchase_price}
-              onChange={(e) => setFormData({...formData, purchase_price: e.target.value})} 
-              required 
-            />
-          </div>
-        </div>
-
-        <button type="submit" className="add-submit-btn">
-          Confirm Addition
+    <div className="asset-ticket fade-in">
+      {/* ✕ Button at the top right to clear search/edit */}
+      {!prefillSymbol && formData.symbol && (
+        <button 
+          className="close-ticket-btn" 
+          onClick={() => setFormData({...formData, symbol: ''})}
+          title="Change stock"
+        >
+          ✕
         </button>
-      </form>
+      )}
+
+      <div className="ticket-header">
+        <span className="ticker-label">SYMBOL</span>
+        <div className="ticker-value-centered">
+          {formData.symbol || "---"}
+        </div>
+      </div>
+
+      {!formData.symbol ? (
+        <div className="search-mode-container">
+          <p className="search-hint">Search for a ticker to start</p>
+          <StockSearch onSelectStock={(sym) => setFormData({...formData, symbol: sym})} />
+        </div>
+      ) : (
+        <form 
+          className="ticket-body" 
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const response = await fetch('https://final-year-project-iaod.onrender.com/api/assets/add', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ...formData, user_id: user.id }),
+            });
+            if (response.ok) onComplete();
+          }}
+        >
+          <div className="ticket-row">
+            <div className="ticket-group">
+              <label>Shares</label>
+              <input 
+                type="number" 
+                placeholder="0.00"
+                value={formData.quantity}
+                onChange={(e) => setFormData({...formData, quantity: e.target.value})} 
+                required 
+              />
+            </div>
+            <div className="ticket-group">
+              <label>Avg. Cost</label>
+              <div className="price-input-wrapper">
+                <span>$</span>
+                <input 
+                  type="number" 
+                  step="0.01"
+                  placeholder="0.00"
+                  value={formData.purchase_price}
+                  onChange={(e) => setFormData({...formData, purchase_price: e.target.value})} 
+                  required 
+                />
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" className="confirm-btn">
+            Add to Portfolio
+          </button>
+        </form>
+      )}
     </div>
   );
 }

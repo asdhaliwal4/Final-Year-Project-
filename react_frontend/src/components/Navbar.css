@@ -54,7 +54,8 @@
   color: var(--text-dim);
   font-size: 0.9rem;
   border-left: 1px solid var(--glass-border);
-  padding-left: 2rem;
+  padding-left: 1.5rem;
+  margin-right: 0.5rem; /* Adds space before the Logout button */
 }
 
 /* Standout buttons */
