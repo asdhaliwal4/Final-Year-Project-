@@ -10,44 +10,60 @@ function Homepage({ user, handleLogout }) {
   const [stockPrice, setStockPrice] = useState(null);
   const navigate = useNavigate();
 
+  // I use this to grab the live price from my Render backend
   const handleSelectStock = (symbol) => {
     setSelectedStock(symbol);
+    setStockPrice(null); // Reset price while I fetch the new one
     fetch(`https://final-year-project-iaod.onrender.com/api/quote/${symbol}`)
       .then(res => res.json())
       .then(data => setStockPrice(data.c))
-      .catch(err => console.error(err));
+      .catch(err => console.error("Price fetch failed:", err));
   };
 
   return (
-    <div className="homepage">
+    <div className="homepage fade-in">
       <Navbar user={user} handleLogout={handleLogout} />
 
-      <header className="hero">
-        <h1>Invest & Track</h1>
-        <p>Real-time portfolio management for stocks and crypto.</p>
-        
-        <div className="search-box">
-          <StockSearch onSelectStock={handleSelectStock} />
-        </div>
+      <main className="hero">
+        {/* My main header section */}
+        <section className="hero-content">
+          <h1>Invest & Track</h1>
+          <p>The smartest way to manage your global portfolio in real-time.</p>
+          
+          <div className="search-box">
+            <StockSearch onSelectStock={handleSelectStock} />
+          </div>
+        </section>
 
+        {/* This shows up once I pick a stock */}
         {selectedStock && (
-          <div className="selection-modal">
-            <h3>{selectedStock}</h3>
-            <p className="price-highlight">Live Price: ${stockPrice || '...'}</p>
-            {user ? (
-              <AddAssetForm 
-                user={user} 
-                prefillSymbol={selectedStock} 
-                onComplete={() => setSelectedStock(null)} 
-              />
-            ) : (
-              <button className="login-btn" onClick={() => navigate('/signin')}>
-                Sign in to add to portfolio
-              </button>
-            )}
+          <div className="selection-card">
+            <div className="card-header">
+              <h3>{selectedStock}</h3>
+              <p className="price-tag">
+                {stockPrice ? `$${stockPrice}` : 'Fetching price...'}
+              </p>
+            </div>
+            
+            <div className="card-body">
+              {user ? (
+                <AddAssetForm 
+                  user={user} 
+                  prefillSymbol={selectedStock} 
+                  onComplete={() => setSelectedStock(null)} 
+                />
+              ) : (
+                <div className="auth-prompt">
+                  <p>Want to track this? 👇</p>
+                  <button className="primary-btn" onClick={() => navigate('/signin')}>
+                    Sign in to add to portfolio
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
-      </header>
+      </main>
     </div>
   );
 }
