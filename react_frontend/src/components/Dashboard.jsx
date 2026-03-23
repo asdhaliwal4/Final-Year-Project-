@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './Navbar'; 
 import AddAssetForm from './AddAssetForm';
-import './Dashboard.css'; // This links the two files together
+import '../App.css'; // I need this for the global glass styles
+import './Dashboard.css'; 
 
 function Dashboard({ user, handleLogout }) {
   const [portfolio, setPortfolio] = useState([]);
@@ -9,15 +10,17 @@ function Dashboard({ user, handleLogout }) {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  // Safety check to prevent the "white screen" error
+  // Quick check so the page doesn't crash if the user isn't logged in yet
   if (!user) {
     return (
-      <div className="dashboard-loader">
-        <h2>Loading your profile...</h2>
+      <div className="loading-screen">
+        <div className="spinner"></div>
+        <p>Loading your profile...</p>
       </div>
     );
   }
 
+  // I'm pulling my data from the live Render API
   const fetchPortfolio = useCallback(() => {
     setLoading(true);
     fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/${user.id}`)
@@ -40,14 +43,14 @@ function Dashboard({ user, handleLogout }) {
   }, [fetchPortfolio]);
 
   const handleDelete = async (assetId) => {
-    if (window.confirm("Are you sure you want to remove this asset?")) {
+    if (window.confirm("Delete this asset from your portfolio?")) {
       try {
         const response = await fetch(`https://final-year-project-iaod.onrender.com/api/assets/${assetId}`, {
           method: 'DELETE',
         });
-        if (response.ok) fetchPortfolio(); // Refresh table immediately
+        if (response.ok) fetchPortfolio(); 
       } catch (err) {
-        console.error("Delete error:", err);
+        console.error("Delete failed:", err);
       }
     }
   };
@@ -55,29 +58,34 @@ function Dashboard({ user, handleLogout }) {
   const totalValue = portfolio.reduce((sum, item) => sum + parseFloat(item.total_value || 0), 0);
 
   return (
-    <div className="dashboard-wrapper">
+    <div className="dashboard-page fade-in">
       <Navbar user={user} handleLogout={handleLogout} />
       
-      <div className="dashboard-container">
-        <h1>Dashboard</h1>
-        <p>Welcome, <strong>{user.first_name}</strong>!</p>
+      <main className="dashboard-content">
+        <header className="dashboard-header">
+          <h1>My Portfolio</h1>
+          <p>Welcome back, <span>{user.first_name}</span></p>
+        </header>
 
-        <div className="value-card">
-          <h3>Total Portfolio Value</h3>
-          <h2 className="value-amount">
+        {/* This is my main value card - simplified the look */}
+        <div className="total-value-card">
+          <p className="label">Total Portfolio Value</p>
+          <h2 className="amount">
             ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
           </h2>
         </div>
 
-        <button 
-          onClick={() => setShowForm(!showForm)} 
-          className={`btn-action ${showForm ? 'btn-cancel' : 'btn-add'}`}
-        >
-          {showForm ? "Cancel" : "+ Add New Asset"}
-        </button>
+        <div className="action-bar">
+          <button 
+            onClick={() => setShowForm(!showForm)} 
+            className={`add-btn ${showForm ? 'cancel' : ''}`}
+          >
+            {showForm ? "Close Form" : "+ Add Asset"}
+          </button>
+        </div>
 
         {showForm && (
-          <div className="form-overlay">
+          <div className="form-card-wrapper">
             <AddAssetForm 
               user={user} 
               onComplete={() => {
@@ -89,36 +97,36 @@ function Dashboard({ user, handleLogout }) {
         )}
 
         {loading ? (
-          <p>Syncing market data...</p>
+          <div className="status-msg">Syncing with markets...</div>
         ) : error ? (
-          <p className="error-text">Error: {error}</p>
+          <div className="status-msg error">{error}</div>
         ) : (
-          <div className="table-overflow">
-            <table className="asset-data-table">
+          <div className="table-container">
+            <table className="portfolio-table">
               <thead>
                 <tr>
                   <th>Symbol</th>
-                  <th>Qty</th>
+                  <th>Quantity</th>
                   <th>Buy Price</th>
-                  <th>Current Price</th>
-                  <th>Total Value</th>
+                  <th>Current</th>
+                  <th>Total</th>
                   <th>Gain/Loss</th>
-                  <th>Actions</th>
+                  <th></th>
                 </tr>
               </thead>
               <tbody>
                 {portfolio.map((item) => (
                   <tr key={item.id}>
-                    <td><strong>{item.symbol}</strong></td>
+                    <td className="sym"><strong>{item.symbol}</strong></td>
                     <td>{parseFloat(item.quantity).toFixed(2)}</td>
                     <td>${parseFloat(item.purchase_price).toFixed(2)}</td>
-                    <td className="price-highlight">${parseFloat(item.current_price).toFixed(2)}</td>
+                    <td className="live-price">${parseFloat(item.current_price).toFixed(2)}</td>
                     <td>${parseFloat(item.total_value).toFixed(2)}</td>
-                    <td className={item.gain_loss >= 0 ? 'gain-plus' : 'loss-minus'}>
+                    <td className={item.gain_loss >= 0 ? 'profit' : 'loss'}>
                       {item.gain_loss >= 0 ? '+' : ''}{item.gain_loss}
                     </td>
                     <td>
-                      <button className="delete-btn" onClick={() => handleDelete(item.id)}>Remove</button>
+                      <button className="remove-btn" onClick={() => handleDelete(item.id)}>Remove</button>
                     </td>
                   </tr>
                 ))}
@@ -126,7 +134,7 @@ function Dashboard({ user, handleLogout }) {
             </table>
           </div>
         )}
-      </div>
+      </main>
     </div>
   );
 }
