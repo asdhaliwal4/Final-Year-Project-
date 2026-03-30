@@ -74,3 +74,37 @@
 .search-results-dropdown li:hover {
   background: var(--primary);
 }
+
+.range-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 6px;
+  border-radius: 14px;
+  width: fit-content;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.range-selector button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 10px 20px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.range-selector button:hover {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.range-selector button.active {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
