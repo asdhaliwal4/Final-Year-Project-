@@ -1,5 +1,6 @@
 import React from 'react';
 import './Footer.css';
+import { Link } from 'react-router-dom';
 
 function Footer() {
   return (
@@ -13,16 +14,18 @@ function Footer() {
         <div className="footer-links">
           <div className="link-group">
             <h5>Platform</h5>
-            <a href="#">About Us</a>
-            <a href="#">Security</a>
+            {/* I've swapped these to use 'Link' so they connect to your new routes */}
+            <Link to="/about">About Us</Link>
+            <Link to="/privacy">Security</Link>
           </div>
           <div className="link-group">
             <h5>Legal</h5>
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/terms">Terms of Service</Link>
           </div>
           <div className="link-group">
             <h5>Contact</h5>
+            {/* I'm keeping this as an 'a' tag so it opens your email app */}
             <a href="mailto:support@investtrack.com">Support</a>
           </div>
         </div>

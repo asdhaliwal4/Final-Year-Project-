@@ -1,0 +1,48 @@
+.info-page-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.info-content {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 120px 20px 80px;
+}
+
+.info-card {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 24px;
+  padding: 60px;
+  max-width: 800px;
+  width: 100%;
+}
+
+.info-card h1 {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 40px;
+  background: linear-gradient(to bottom, #fff, #94a3b8);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.info-text {
+  color: var(--text-dim);
+  line-height: 1.8;
+  font-size: 1.1rem;
+}
+
+.info-text h2 {
+  color: white;
+  margin: 30px 0 15px;
+  font-size: 1.4rem;
+}
+
+.info-text p {
+  margin-bottom: 20px;
+}

@@ -3,7 +3,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import '../App.css'; // I need this for the global glass styles
-import './CreateAccount.css'; 
+import './CreateAccount.css';
+import Footer from './Footer';
+
 
 function SignIn({ handleLogin }) { 
   const [formData, setFormData] = useState({
