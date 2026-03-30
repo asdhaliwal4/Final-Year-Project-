@@ -119,3 +119,20 @@
   cursor: pointer;
   transition: 0.3s;
 }
+
+.ticker-symbol-link {
+  color: var(--primary); 
+  text-decoration: none;
+  font-weight: 800;
+  transition: 0.3s ease;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.05); 
+}
+
+.ticker-symbol-link:hover {
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
+}

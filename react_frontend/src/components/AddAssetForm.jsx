@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom'; // I'm adding this to enable navigation
 import StockSearch from './StockSearch';
 import '../App.css'; 
 import './AddAssetForm.css';
@@ -12,7 +13,6 @@ function AddAssetForm({ user, prefillSymbol, onComplete }) {
 
   return (
     <div className="asset-ticket fade-in">
-      {/* ✕ Button at the top right to clear search/edit */}
       {!prefillSymbol && formData.symbol && (
         <button 
           className="close-ticket-btn" 
@@ -26,7 +26,14 @@ function AddAssetForm({ user, prefillSymbol, onComplete }) {
       <div className="ticket-header">
         <span className="ticker-label">SYMBOL</span>
         <div className="ticker-value-centered">
-          {formData.symbol || "---"}
+          {/* If I have a symbol, I'll turn it into a link to my details page */}
+          {formData.symbol ? (
+            <Link to={`/stock/${formData.symbol}`} className="ticker-symbol-link">
+              {formData.symbol}
+            </Link>
+          ) : (
+            "---"
+          )}
         </div>
       </div>
 

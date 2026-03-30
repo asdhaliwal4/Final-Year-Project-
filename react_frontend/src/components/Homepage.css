@@ -40,3 +40,79 @@
   transform: translateY(-2px);
   box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
 }
+
+/* Container for the whole section */
+.top-stocks-section {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 20px;
+  width: 100%;
+}
+
+.section-title {
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+/* This is what forces them to go left-to-right */
+.mag7-grid {
+  display: grid;
+  /* This creates up to 7 columns if there is space, otherwise it wraps */
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); 
+  gap: 15px;
+  justify-content: center;
+}
+
+/* My Glass Box Style */
+.stock-card-glass {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 18px;
+  border-radius: 16px;
+  text-decoration: none; /* Removes the blue underline */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centers the text inside the box */
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.stock-card-glass:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.4);
+  transform: translateY(-5px);
+}
+
+.stock-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stock-name {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.stock-symbol {
+  color: var(--primary, #3b82f6); /* Uses my blue or a default blue */
+  font-size: 0.75rem;
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.card-arrow {
+  margin-top: 10px;
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.9rem;
+}
+
+.stock-card-glass:hover .card-arrow {
+  color: #3b82f6;
+}
