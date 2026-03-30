@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Navbar from './Navbar'; 
 import AddAssetForm from './AddAssetForm';
-import '../App.css'; // I need this for the global glass styles
+import Footer from './Footer';
+import '../App.css'; 
 import './Dashboard.css'; 
 
 function Dashboard({ user, handleLogout }) {
@@ -10,7 +11,7 @@ function Dashboard({ user, handleLogout }) {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  // Quick check so the page doesn't crash if the user isn't logged in yet
+  // I'm just checking that we have a user logged in so the app doesn't crash
   if (!user) {
     return (
       <div className="loading-screen">
@@ -20,7 +21,7 @@ function Dashboard({ user, handleLogout }) {
     );
   }
 
-  // I'm pulling my data from the live Render API
+  // Fetching the portfolio data from my live Render backend
   const fetchPortfolio = useCallback(() => {
     setLoading(true);
     fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/${user.id}`)
@@ -43,7 +44,8 @@ function Dashboard({ user, handleLogout }) {
   }, [fetchPortfolio]);
 
   const handleDelete = async (assetId) => {
-    if (window.confirm("Delete this asset from your portfolio?")) {
+    // Asking for confirmation before actually removing an asset
+    if (window.confirm("Are you sure you want to delete this from your portfolio?")) {
       try {
         const response = await fetch(`https://final-year-project-iaod.onrender.com/api/assets/${assetId}`, {
           method: 'DELETE',
@@ -55,6 +57,7 @@ function Dashboard({ user, handleLogout }) {
     }
   };
 
+  // Working out the total value of the entire portfolio
   const totalValue = portfolio.reduce((sum, item) => sum + parseFloat(item.total_value || 0), 0);
 
   return (
@@ -67,7 +70,7 @@ function Dashboard({ user, handleLogout }) {
           <p>Welcome back, <span>{user.first_name}</span></p>
         </header>
 
-        {/* This is my main value card - simplified the look */}
+        {/* My main card showing the total balance - I've kept this nice and simple */}
         <div className="total-value-card">
           <p className="label">Total Portfolio Value</p>
           <h2 className="amount">
@@ -84,6 +87,7 @@ function Dashboard({ user, handleLogout }) {
           </button>
         </div>
 
+        {/* This bit handles the pop-up form for new stocks */}
         {showForm && (
           <div className="form-card-wrapper">
             <AddAssetForm 
@@ -135,6 +139,7 @@ function Dashboard({ user, handleLogout }) {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }

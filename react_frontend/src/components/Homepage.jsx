@@ -3,6 +3,7 @@ import Navbar from './Navbar';
 import StockSearch from './StockSearch';
 import AddAssetForm from './AddAssetForm';
 import '../App.css'; 
+import Footer from './Footer';
 
 function Homepage({ user, handleLogout }) {
   const [selectedStock, setSelectedStock] = useState(null);
@@ -19,11 +20,11 @@ function Homepage({ user, handleLogout }) {
           <StockSearch onSelectStock={(symbol) => setSelectedStock(symbol)} />
         </div>
 
-        {/* This card only shows up when I pick a stock */}
+        {/* This part only pops up once I've actually picked a stock */}
         {selectedStock && (
           <div className="selection-container fade-in">
             <div className="selection-card-wrapper">
-              {/* My new Close/Cancel button */}
+              {/* My close button to cancel the search */}
               <button 
                 className="close-selection-btn" 
                 onClick={() => setSelectedStock(null)}
@@ -41,6 +42,7 @@ function Homepage({ user, handleLogout }) {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 }
