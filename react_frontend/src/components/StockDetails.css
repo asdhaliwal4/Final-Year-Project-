@@ -1,3 +1,4 @@
+/* I'm keeping my main layout settings */
 .details-content {
   max-width: 1000px;
   margin: 120px auto 60px;
@@ -15,14 +16,18 @@
   font-size: 2.5rem;
   font-weight: 800;
   margin-top: 10px;
+  letter-spacing: -1px;
 }
 
+/* My chart range selector styles */
 .range-picker {
   display: flex;
   background: var(--glass);
   padding: 5px;
   border-radius: 12px;
   border: 1px solid var(--glass-border);
+  width: fit-content;
+  margin-bottom: 20px;
 }
 
 .range-picker button {
@@ -39,6 +44,7 @@
 .range-picker button.active {
   background: var(--primary);
   color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .chart-container-glass {
@@ -47,19 +53,102 @@
   border-radius: 24px;
   padding: 30px;
   margin-bottom: 30px;
+  backdrop-filter: blur(10px);
 }
 
-.stats-grid {
+/* My new 2-column layout for the bottom info */
+.info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: 1.4fr 1fr;
+  gap: 25px;
+  margin-top: 30px;
+}
+
+/* My glass card styling for the about section */
+.about-card {
+  background: var(--glass);
+  padding: 30px;
+  border-radius: 24px;
+  border: 1px solid var(--glass-border);
+}
+
+.about-card h3 {
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+  color: #fff;
+}
+
+.about-card p {
+  color: var(--text-dim);
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+/* I'm making my website link look like a professional button */
+.site-link {
+  display: inline-flex;
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 10px 18px;
+  border-radius: 10px;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: 0.3s;
+  border: 1px solid var(--glass-border);
+}
+
+.site-link:hover {
+  background: var(--primary);
+  color: white;
+}
+
+/* My sidebar stats setup */
+.stats-sidebar {
+  background: var(--glass);
+  padding: 30px;
+  border-radius: 24px;
+  border: 1px solid var(--glass-border);
+}
+
+.stats-sidebar h3 {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+/* I'm using a mini-grid for my stats inside the sidebar */
+.stats-display-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
 
-.stat-card {
-  background: var(--glass);
-  padding: 20px;
-  border-radius: 16px;
-  border: 1px solid var(--glass-border);
+.stat-item {
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Color indicators for the 52-week range */
+.high { color: #10b981; }
+.low { color: #ef4444; }
+
+@media (max-width: 900px) {
+  .info-grid {
+    grid-template-columns: 1fr;
+  }
 }

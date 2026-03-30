@@ -86,40 +86,44 @@ function StockDetails({ user }) {
           <StockChart symbol={symbol} apiKey={POLY_KEY} range={range} />
         </div>
 
+        {/* I've reorganized my info section into a better visual grid */}
         <section className="info-grid">
-          <div className="about-card">
-            <h3>About {overview?.name}</h3>
+          <div className="about-card glass-card">
+            <h3>Company Profile</h3>
             <p>
-              {overview?.name} is a company in the {overview?.finnhubIndustry} sector, 
-              trading on the {overview?.exchange}. I've pulled this data to give context to the stock's performance.
+              {overview?.name} is a leading entity in the {overview?.finnhubIndustry} sector. 
+              The company is currently listed and trading on the {overview?.exchange}.
             </p>
             {overview?.weburl && (
-              <a href={overview.weburl} target="_blank" rel="noreferrer" className="site-link">
-                Visit Official Website →
+              <a href={overview.weburl} target="_blank" rel="noreferrer" className="visit-website-btn">
+                Official Website <span>→</span>
               </a>
             )}
           </div>
 
-          <div className="stats-sidebar">
-            <div className="stat-row">
-              <span>Market Cap</span> 
-              <strong>
-                {metrics?.marketCapitalization 
-                  ? `$${(metrics.marketCapitalization / 1000).toFixed(2)}B` 
-                  : '---'}
-              </strong>
-            </div>
-            <div className="stat-row">
-              <span>P/E Ratio</span> 
-              <strong>{metrics?.peBasicExclExtraTTM?.toFixed(2) || '---'}</strong>
-            </div>
-            <div className="stat-row">
-              <span>52W High</span> 
-              <strong>${metrics?.['52WeekHigh']?.toFixed(2) || '---'}</strong>
-            </div>
-            <div className="stat-row">
-              <span>52W Low</span> 
-              <strong>${metrics?.['52WeekLow']?.toFixed(2) || '---'}</strong>
+          <div className="stats-sidebar glass-card">
+            <h3>Key Statistics</h3>
+            <div className="stats-grid">
+              <div className="stat-item">
+                <span className="stat-label">Market Cap</span>
+                <strong className="stat-value">
+                  {metrics?.marketCapitalization 
+                    ? `$${(metrics.marketCapitalization / 1000).toFixed(2)}B` 
+                    : '---'}
+                </strong>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">P/E Ratio</span>
+                <strong className="stat-value">{metrics?.peBasicExclExtraTTM?.toFixed(2) || '---'}</strong>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">52W High</span>
+                <strong className="stat-value highlight-up">${metrics?.['52WeekHigh']?.toFixed(2) || '---'}</strong>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">52W Low</span>
+                <strong className="stat-value highlight-down">${metrics?.['52WeekLow']?.toFixed(2) || '---'}</strong>
+              </div>
             </div>
           </div>
         </section>
