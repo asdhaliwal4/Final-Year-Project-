@@ -58,7 +58,6 @@
   text-align: center;
 }
 
-/* This is what forces them to go left-to-right */
 .mag7-grid {
   display: grid;
   /* This creates up to 7 columns if there is space, otherwise it wraps */

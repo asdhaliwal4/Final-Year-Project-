@@ -2,12 +2,13 @@
 import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Homepage from './components/Homepage';
-import SignIn from './components/SignIn';
+import SignIn from './components/SignIn'; // Imported as SignIn
 import CreateAccount from './components/CreateAccount';
 import Dashboard from './components/Dashboard';
 import InfoPage from './components/InfoPage';
 import ScrollToTop from './components/ScrollToTop';
 import StockDetails from './components/StockDetails';
+import Settings from './components/Settings';
 
 function App() {
   // Storing the user info here so I can check if they're logged in across the whole site
@@ -27,23 +28,32 @@ function App() {
       <ScrollToTop /> 
 
       <Routes>
+        {/* 1. Homepage */}
         <Route path="/" element={<Homepage user={user} handleLogout={handleLogout} />} />
         
-        {/* If I'm already logged in, I shouldn't be able to see the sign-in page */}
+        {/* 2. Authentication */}
         <Route 
           path="/signin" 
           element={user ? <Navigate to="/dashboard" /> : <SignIn handleLogin={handleLogin} />} 
         />
-        
         <Route path="/create-account" element={<CreateAccount />} />
         
-        {/* Guarding the dashboard so only logged-in users can get in */}
+        {/* 3. Protected Dashboard */}
         <Route 
           path="/dashboard" 
           element={user ? <Dashboard user={user} handleLogout={handleLogout} /> : <Navigate to="/signin" />} 
         />
 
-        {/* These are my static info pages for the footer links */}
+        {/* 4. Stock Details */}
+        <Route path="/stock/:symbol" element={<StockDetails user={user} />} />
+
+        {/* 5. Protected Settings */}
+        <Route 
+          path="/settings" 
+          element={user ? <Settings user={user} setUser={setUser} /> : <Navigate to="/signin" />} 
+        />
+
+        {/* 6. Static Info Pages */}
         <Route path="/about" element={
           <InfoPage title="About Invest & Track">
             <p>Founded in 2026, Invest & Track was built to simplify the complex world of global finance.</p>
@@ -67,7 +77,6 @@ function App() {
             <p>Our tools are for informational purposes only. We are not financial advisors, and all investment decisions are made at your own risk.</p>
           </InfoPage>
         } />
-        <Route path="/stock/:symbol" element={<StockDetails user={user} />} />
       </Routes>
     </BrowserRouter>
   );

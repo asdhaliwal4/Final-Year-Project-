@@ -1,13 +1,12 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import '../App.css'; // I need this for my global theme
+import { useNavigate, Link } from 'react-router-dom'; // I added 'Link' here to fix the crash
+import '../App.css'; 
 import './Navbar.css';
 import logoImage from '../assets/logo-black.png';
 
 function Navbar({ user, handleLogout }) {
   const navigate = useNavigate();
 
-  // I'm handling the logout and sending them back to the start
   const onLogout = () => {
     handleLogout();
     navigate('/');
@@ -16,7 +15,7 @@ function Navbar({ user, handleLogout }) {
   return (
     <nav className="navbar fade-in">
       {/* My logo area on the left */}
-      <div className="navbar-left" onClick={() => navigate('/')}>
+      <div className="navbar-left" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
         <img src={logoImage} alt="Logo" className="nav-logo" />
         <span className="brand-name">Invest & Track</span>
       </div>
@@ -24,10 +23,18 @@ function Navbar({ user, handleLogout }) {
       <div className="navbar-right">
         {user ? (
           <div className="nav-user-controls">
+            {/* Dashboard Link */}
             <button className="nav-link-btn" onClick={() => navigate('/dashboard')}>
               Dashboard
             </button>
+            
+            {/* I've added my new Settings link here so it only shows when I'm logged in */}
+            <button className="nav-link-btn" onClick={() => navigate('/settings')}>
+              Settings
+            </button>
+
             <span className="welcome-text">Hi, {user.first_name}</span>
+            
             <button className="logout-action-btn" onClick={onLogout}>
               Logout
             </button>
