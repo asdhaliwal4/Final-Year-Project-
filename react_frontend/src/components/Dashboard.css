@@ -107,3 +107,35 @@
   color: white;
   border-color: #ef4444;
 }
+
+.history-link-btn {
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-dim);
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid var(--glass-border);
+  transition: 0.3s;
+}
+
+.history-link-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.back-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.date-removed {
+  color: #ef4444; 
+  font-weight: 600;
+}

@@ -33,11 +33,7 @@ const allowedOrigins = [
 ];
 app.use(cors({
   origin: function (origin, callback) {
-    // allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) === -1) {
-      return callback(null, true); // For now, allow all during testing, or replace with logic
-    }
     return callback(null, true);
   },
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -46,7 +42,7 @@ app.use(cors({
 
 app.use(express.json());
 
-//check to see if the server is actually alive
+// Check to see if the server is actually alive
 app.get("/", (req, res) => {
   res.send("Node backend is running!");
 });
@@ -94,11 +90,12 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// Grabbing the user's stocks and getting fresh prices from Finnhub
+// Grabbing active stocks only (hiding items that have a deleted_at date)
 app.get("/api/portfolio/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    const [assets] = await pool.query("SELECT * FROM assets WHERE user_id = ?", [userId]);
+    // I added 'AND deleted_at IS NULL' so my removed stocks don't show on the main dashboard
+    const [assets] = await pool.query("SELECT * FROM assets WHERE user_id = ? AND deleted_at IS NULL", [userId]);
 
     const portfolioWithPrices = await Promise.all(assets.map(async (asset) => {
       try {
@@ -123,6 +120,20 @@ app.get("/api/portfolio/:userId", async (req, res) => {
   }
 });
 
+// Grabbing the trade history (only showing items that HAVE a deleted_at date)
+app.get("/api/portfolio/history/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const [history] = await pool.query(
+      "SELECT * FROM assets WHERE user_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC", 
+      [userId]
+    );
+    res.json(history);
+  } catch (error) {
+    res.status(500).json({ message: "Error fetching history." });
+  }
+});
+
 // Adding a new stock to the user's collection
 app.post("/api/assets/add", async (req, res) => {
   try {
@@ -135,13 +146,14 @@ app.post("/api/assets/add", async (req, res) => {
   }
 });
 
-// Dropping a stock from the portfolio
+// Moving a stock to history instead of actually deleting it
 app.delete("/api/assets/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const sql = "DELETE FROM assets WHERE id = ?";
+    // I'm using UPDATE and NOW() to mark when I removed the stock
+    const sql = "UPDATE assets SET deleted_at = NOW() WHERE id = ?";
     await pool.query(sql, [id]);
-    res.status(200).json({ message: "Asset removed successfully" });
+    res.status(200).json({ message: "Asset moved to history successfully" });
   } catch (error) {
     console.error("Delete error:", error);
     res.status(500).json({ message: "Error removing asset" });

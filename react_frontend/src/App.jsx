@@ -9,6 +9,7 @@ import InfoPage from './components/InfoPage';
 import ScrollToTop from './components/ScrollToTop';
 import StockDetails from './components/StockDetails';
 import Settings from './components/Settings';
+import History from './components/History';
 
 function App() {
   // Storing the user info here so I can check if they're logged in across the whole site
@@ -77,6 +78,11 @@ function App() {
             <p>Our tools are for informational purposes only. We are not financial advisors, and all investment decisions are made at your own risk.</p>
           </InfoPage>
         } />
+        
+        <Route 
+          path="/history" 
+          element={user ? <History user={user} handleLogout={handleLogout} /> : <Navigate to="/signin" />} 
+/>
       </Routes>
     </BrowserRouter>
   );

@@ -118,6 +118,9 @@ function Dashboard({ user, handleLogout }) {
           >
             {showForm ? "Close Form" : "+ Add Asset"}
           </button>
+          <Link to="/history" className="history-link-btn">
+    View History →
+  </Link>
         </div>
 
         {showForm && (
