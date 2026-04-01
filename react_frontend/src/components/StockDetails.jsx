@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import StockChart from './StockChart';
+import AddAssetForm from './AddAssetForm'; 
 import './StockDetails.css';
 
 function StockDetails({ user }) {
@@ -12,17 +13,19 @@ function StockDetails({ user }) {
   const [metrics, setMetrics] = useState(null); 
   const [loading, setLoading] = useState(true);
   
-  // I'm using '1M' as the default view for my chart
+  // State to toggle the add asset form
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  // Time range selector state
   const [range, setRange] = useState('1M');
 
-  // Pulling my keys from my frontend env file
+  // API Keys
   const FINN_KEY = import.meta.env.VITE_FINNHUB_KEY;
   const POLY_KEY = import.meta.env.VITE_POLYGON_KEY;
 
   useEffect(() => {
     setLoading(true);
 
-    // I'm fetching the live price, company metrics, and profile all at once
     const fetchLive = fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINN_KEY}`)
       .then(res => res.json());
 
@@ -40,7 +43,7 @@ function StockDetails({ user }) {
         setLoading(false);
       })
       .catch(err => {
-        console.error("My data fetch failed:", err);
+        console.error("Data fetch failed:", err);
         setLoading(false);
       });
   }, [symbol, FINN_KEY]);
@@ -52,6 +55,27 @@ function StockDetails({ user }) {
       <Navbar user={user} />
       
       <main className="details-content">
+        {/* Form Overlay with circular X button */}
+        {showAddForm && (
+          <div className="detail-form-overlay fade-in">
+            <div className="form-container-glass relative-container">
+               <button 
+                 className="close-form-x-btn" 
+                 onClick={() => setShowAddForm(false)}
+                 aria-label="Close form"
+               >
+                 ✕
+               </button>
+               
+               <AddAssetForm 
+                 user={user} 
+                 prefillSymbol={symbol} 
+                 onComplete={() => setShowAddForm(false)} 
+               />
+            </div>
+          </div>
+        )}
+
         <header className="details-header">
           <div className="symbol-info">
             <h1>{overview?.name || symbol}</h1>
@@ -61,14 +85,20 @@ function StockDetails({ user }) {
           </div>
           
           <div className="price-area">
-             <h2 className="price-big">${liveData?.c?.toFixed(2) || '---'}</h2>
-             <p className={liveData?.d >= 0 ? 'profit' : 'loss'}>
-               {liveData?.d >= 0 ? '+' : ''}{liveData?.d?.toFixed(2)} ({liveData?.dp?.toFixed(2)}%)
-             </p>
+              <div className="price-row">
+                <h2 className="price-big">${liveData?.c?.toFixed(2) || '---'}</h2>
+                {user && (
+                  <button className="add-to-portfolio-btn" onClick={() => setShowAddForm(true)}>
+                    + Add Asset
+                  </button>
+                )}
+              </div>
+              <p className={liveData?.d >= 0 ? 'profit' : 'loss'}>
+                {liveData?.d >= 0 ? '+' : ''}{liveData?.d?.toFixed(2)} ({liveData?.dp?.toFixed(2)}%)
+              </p>
           </div>
         </header>
 
-        {/* This is my time range selector for the chart */}
         <div className="range-selector">
           {['1W', '1M', '1Y'].map((r) => (
             <button 
@@ -82,11 +112,9 @@ function StockDetails({ user }) {
         </div>
 
         <div className="chart-container-glass">
-          {/* I'm passing the selected range down to my chart component */}
           <StockChart symbol={symbol} apiKey={POLY_KEY} range={range} />
         </div>
 
-        {/* I've reorganized my info section into a better visual grid */}
         <section className="info-grid">
           <div className="about-card glass-card">
             <h3>Company Profile</h3>

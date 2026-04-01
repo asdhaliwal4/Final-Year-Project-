@@ -152,3 +152,65 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Layout for the price and button */
+.price-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.add-to-portfolio-btn {
+  background: #3b82f6; 
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.detail-form-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7); 
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.form-container-glass {
+  position: relative;
+  background: transparent; 
+  border: none;
+  box-shadow: none;
+  padding: 0;
+}
+
+.close-form-x-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1a1a2e; 
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 2001;
+  transition: 0.2s;
+}
+
+.close-form-x-btn:hover {
+  background: #3b82f6;
+  transform: scale(1.1);
+}

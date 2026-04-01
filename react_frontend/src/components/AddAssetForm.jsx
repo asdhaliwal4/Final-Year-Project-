@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom'; // I'm adding this to enable navigation
+import { Link } from 'react-router-dom';
 import StockSearch from './StockSearch';
 import '../App.css'; 
 import './AddAssetForm.css';
@@ -11,12 +11,47 @@ function AddAssetForm({ user, prefillSymbol, onComplete }) {
     purchase_price: '',
   });
 
+  // NEW: States for error handling and animation
+  const [error, setError] = useState("");
+  const [isShaking, setIsShaking] = useState(false);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError(""); // Reset error
+
+    // Validation: Check for negative or zero values
+    if (parseFloat(formData.quantity) <= 0 || parseFloat(formData.purchase_price) <= 0) {
+      setError("Please enter values greater than 0");
+      setIsShaking(true);
+      
+      // Stop the shake after 500ms so it can be triggered again
+      setTimeout(() => setIsShaking(false), 500);
+      return;
+    }
+
+    try {
+      const response = await fetch('https://final-year-project-iaod.onrender.com/api/assets/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, user_id: user.id }),
+      });
+      
+      if (response.ok) onComplete();
+    } catch (err) {
+      setError("Server error. Try again later.");
+    }
+  };
+
   return (
-    <div className="asset-ticket fade-in">
+    /* NEW: Dynamic class 'shake' added here */
+    <div className={`asset-ticket fade-in ${isShaking ? 'shake' : ''}`}>
       {!prefillSymbol && formData.symbol && (
         <button 
           className="close-ticket-btn" 
-          onClick={() => setFormData({...formData, symbol: ''})}
+          onClick={() => {
+            setFormData({...formData, symbol: ''});
+            setError("");
+          }}
           title="Change stock"
         >
           ✕
@@ -26,7 +61,6 @@ function AddAssetForm({ user, prefillSymbol, onComplete }) {
       <div className="ticket-header">
         <span className="ticker-label">SYMBOL</span>
         <div className="ticker-value-centered">
-          {/* If I have a symbol, I'll turn it into a link to my details page */}
           {formData.symbol ? (
             <Link to={`/stock/${formData.symbol}`} className="ticker-symbol-link">
               {formData.symbol}
@@ -43,18 +77,7 @@ function AddAssetForm({ user, prefillSymbol, onComplete }) {
           <StockSearch onSelectStock={(sym) => setFormData({...formData, symbol: sym})} />
         </div>
       ) : (
-        <form 
-          className="ticket-body" 
-          onSubmit={async (e) => {
-            e.preventDefault();
-            const response = await fetch('https://final-year-project-iaod.onrender.com/api/assets/add', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ ...formData, user_id: user.id }),
-            });
-            if (response.ok) onComplete();
-          }}
-        >
+        <form className="ticket-body" onSubmit={handleSubmit}>
           <div className="ticket-row">
             <div className="ticket-group">
               <label>Shares</label>
@@ -81,6 +104,9 @@ function AddAssetForm({ user, prefillSymbol, onComplete }) {
               </div>
             </div>
           </div>
+
+          {/* NEW: Error message display */}
+          {error && <p className="form-error-msg">{error}</p>}
 
           <button type="submit" className="confirm-btn">
             Add to Portfolio
