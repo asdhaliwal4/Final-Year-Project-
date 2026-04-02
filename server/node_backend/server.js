@@ -82,19 +82,71 @@ app.post("/api/login", async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
+    // UPDATE: I'm sending back the last_name now so the settings page has it!
     res.status(200).json({
-      user: { id: user.id, first_name: user.first_name, email: user.email }
+      user: { 
+        id: user.id, 
+        first_name: user.first_name, 
+        last_name: user.last_name, 
+        email: user.email 
+      }
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
+// --- NEW SETTINGS ROUTES START HERE ---
+
+// Route to update First Name, Last Name, and Email
+app.put("/api/user/update-profile", async (req, res) => {
+  try {
+    const { id, first_name, last_name, email } = req.body;
+    const sql = "UPDATE users SET first_name = ?, last_name = ?, email = ? WHERE id = ?";
+    await pool.query(sql, [first_name, last_name, email, id]);
+    
+    res.status(200).json({ message: "Profile updated successfully!" });
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({ error: "Failed to update profile." });
+  }
+});
+
+// Route to change password securely
+app.put("/api/user/change-password", async (req, res) => {
+  try {
+    const { id, currentPassword, newPassword } = req.body;
+
+    // 1. Get the current hashed password from DB
+    const [users] = await pool.query("SELECT password FROM users WHERE id = ?", [id]);
+    if (users.length === 0) return res.status(404).json({ message: "User not found" });
+
+    const user = users[0];
+
+    // 2. Compare the "currentPassword" typed by the user with the hash in DB
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ message: "Incorrect current password." });
+    }
+
+    // 3. Hash the new password and save it
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    const sql = "UPDATE users SET password = ? WHERE id = ?";
+    await pool.query(sql, [hashedNewPassword, id]);
+
+    res.status(200).json({ message: "Password updated!" });
+  } catch (error) {
+    console.error("Password change error:", error);
+    res.status(500).json({ error: "Failed to change password." });
+  }
+});
+
+// --- NEW SETTINGS ROUTES END HERE ---
+
 // Grabbing active stocks only (hiding items that have a deleted_at date)
 app.get("/api/portfolio/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    // I added 'AND deleted_at IS NULL' so my removed stocks don't show on the main dashboard
     const [assets] = await pool.query("SELECT * FROM assets WHERE user_id = ? AND deleted_at IS NULL", [userId]);
 
     const portfolioWithPrices = await Promise.all(assets.map(async (asset) => {
@@ -120,7 +172,7 @@ app.get("/api/portfolio/:userId", async (req, res) => {
   }
 });
 
-// Grabbing the trade history (only showing items that HAVE a deleted_at date)
+// Grabbing the trade history
 app.get("/api/portfolio/history/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -134,7 +186,7 @@ app.get("/api/portfolio/history/:userId", async (req, res) => {
   }
 });
 
-// Adding a new stock to the user's collection
+// Adding a new stock
 app.post("/api/assets/add", async (req, res) => {
   try {
     const { user_id, symbol, quantity, purchase_price } = req.body;
@@ -146,11 +198,10 @@ app.post("/api/assets/add", async (req, res) => {
   }
 });
 
-// Moving a stock to history instead of actually deleting it
+// Moving a stock to history
 app.delete("/api/assets/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    // I'm using UPDATE and NOW() to mark when I removed the stock
     const sql = "UPDATE assets SET deleted_at = NOW() WHERE id = ?";
     await pool.query(sql, [id]);
     res.status(200).json({ message: "Asset moved to history successfully" });
@@ -160,7 +211,7 @@ app.delete("/api/assets/:id", async (req, res) => {
   }
 });
 
-// Searching for stock symbols via the Finnhub API
+// Searching for stock symbols
 app.get("/api/search", async (req, res) => {
   try {
     const { q } = req.query;
@@ -173,7 +224,7 @@ app.get("/api/search", async (req, res) => {
   }
 });
 
-// Getting a single price quote for the search feature
+// Getting a single price quote
 app.get("/api/quote/:symbol", async (req, res) => {
   try {
     const { symbol } = req.params;
