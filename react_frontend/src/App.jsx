@@ -65,7 +65,7 @@ function App() {
 
         <Route 
           path="/settings" 
-          element={user ? <Settings user={user} setUser={setUser} /> : <Navigate to="/signin" />} 
+          element={user ? <Settings user={user} setUser={setUser} handleLogout={handleLogout} /> : <Navigate to="/signin" />} 
         />
 
         <Route path="/about" element={

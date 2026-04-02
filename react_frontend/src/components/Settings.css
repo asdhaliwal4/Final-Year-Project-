@@ -67,3 +67,79 @@
   background: #ef4444;
   color: white;
 }
+
+/* Putting first and last name side-by-side */
+.name-row {
+  display: flex;
+  gap: 15px;
+  width: 100%;
+}
+
+.name-row .input-group {
+  flex: 1;
+}
+
+/* Style for locked inputs */
+input:disabled {
+  background: rgba(255, 255, 255, 0.03);
+  color: #888;
+  cursor: not-allowed;
+  border: 1px solid transparent;
+}
+
+/* Success/Error Banners */
+.message-banner {
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.message-banner.success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #22c55e;
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.message-banner.error {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* Change the button color when it's in 'Save' mode */
+.save-btn.confirm {
+  background: #22c55e; 
+}
+
+.danger-zone {
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.danger-zone h3 {
+  color: #ef4444;
+}
+
+.danger-zone p {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  margin-bottom: 20px;
+}
+
+.delete-btn {
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.delete-btn:hover {
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}

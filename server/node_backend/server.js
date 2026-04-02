@@ -96,7 +96,6 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
-// --- NEW SETTINGS ROUTES START HERE ---
 
 // Route to update First Name, Last Name, and Email
 app.put("/api/user/update-profile", async (req, res) => {
@@ -141,7 +140,6 @@ app.put("/api/user/change-password", async (req, res) => {
   }
 });
 
-// --- NEW SETTINGS ROUTES END HERE ---
 
 // Grabbing active stocks only (hiding items that have a deleted_at date)
 app.get("/api/portfolio/:userId", async (req, res) => {
@@ -237,6 +235,29 @@ app.get("/api/quote/:symbol", async (req, res) => {
   }
 });
 
+// server.js - Add this near your other User routes
+app.delete("/api/user/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // 1. First, wipe all assets belonging to this user
+    await pool.query("DELETE FROM assets WHERE user_id = ?", [id]);
+
+    // 2. Then, delete the user themselves
+    const [result] = await pool.query("DELETE FROM users WHERE id = ?", [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json({ message: "Account and data deleted successfully." });
+  } catch (error) {
+    console.error("Delete account error:", error);
+    res.status(500).json({ error: "Failed to delete account." });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
+

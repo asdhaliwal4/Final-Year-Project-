@@ -3,10 +3,11 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import './Settings.css';
 
-function Settings({ user, setUser }) {
+function Settings({ user, setUser, handleLogout }) { // Added handleLogout prop
   const [profileData, setProfileData] = useState({
-    name: user.name,
-    email: user.email
+    first_name: user.first_name || '',
+    last_name: user.last_name || '',
+    email: user.email || ''
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -15,24 +16,93 @@ function Settings({ user, setUser }) {
     confirmPassword: ''
   });
 
+  const [isEditing, setIsEditing] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
 
-  // I'm handling the name and email update here
+  // 1. Handle Profile Update
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
-    // Fetch call to my backend /api/user/update
-    setMessage({ text: 'Profile updated successfully!', type: 'success' });
+    if (!isEditing) {
+      setIsEditing(true);
+      return;
+    }
+
+    try {
+      const response = await fetch('https://final-year-project-iaod.onrender.com/api/user/update-profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.id,
+          first_name: profileData.first_name,
+          last_name: profileData.last_name,
+          email: profileData.email
+        }),
+      });
+
+      if (response.ok) {
+        setUser({ ...user, ...profileData });
+        setMessage({ text: 'Profile updated successfully!', type: 'success' });
+        setIsEditing(false);
+      } else {
+        setMessage({ text: 'Failed to update profile.', type: 'error' });
+      }
+    } catch (err) {
+      setMessage({ text: 'Server error. Try again later.', type: 'error' });
+    }
   };
 
-  // I'm handling the password change with the security check
+  // 2. Handle Password Change
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       return setMessage({ text: 'New passwords do not match!', type: 'error' });
     }
-    // Fetch call to my backend /api/user/change-password
-    // I'll send currentPassword to my backend to verify it before changing
-    setMessage({ text: 'Password changed securely.', type: 'success' });
+
+    try {
+      const response = await fetch('https://final-year-project-iaod.onrender.com/api/user/change-password', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: user.id,
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        setMessage({ text: 'Password updated successfully.', type: 'success' });
+        setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      } else {
+        setMessage({ text: data.message || 'Error updating password.', type: 'error' });
+      }
+    } catch (err) {
+      setMessage({ text: 'Server error.', type: 'error' });
+    }
+  };
+
+  // 3. NEW: Handle Delete Account
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "WARNING: This will permanently delete your account and all portfolio data. This action cannot be undone. Are you sure?"
+    );
+
+    if (confirmed) {
+      try {
+        const response = await fetch(`https://final-year-project-iaod.onrender.com/api/user/${user.id}`, {
+          method: 'DELETE',
+        });
+
+        if (response.ok) {
+          alert("Account successfully deleted.");
+          handleLogout(); // Clears storage and redirects to sign-in
+        } else {
+          setMessage({ text: 'Could not delete account. Try again later.', type: 'error' });
+        }
+      } catch (err) {
+        setMessage({ text: 'Server error.', type: 'error' });
+      }
+    }
   };
 
   return (
@@ -50,31 +120,46 @@ function Settings({ user, setUser }) {
         )}
 
         <div className="settings-grid">
-          {/* Section 1: General Profile */}
+          {/* General Profile Section */}
           <section className="settings-card glass-card">
             <h3>General Profile</h3>
             <form onSubmit={handleProfileUpdate}>
-              <div className="input-group">
-                <label>Full Name</label>
-                <input 
-                  type="text" 
-                  value={profileData.name} 
-                  onChange={(e) => setProfileData({...profileData, name: e.target.value})} 
-                />
+              <div className="name-row">
+                <div className="input-group">
+                  <label>First Name</label>
+                  <input 
+                    type="text" 
+                    disabled={!isEditing} 
+                    value={profileData.first_name} 
+                    onChange={(e) => setProfileData({...profileData, first_name: e.target.value})} 
+                  />
+                </div>
+                <div className="input-group">
+                  <label>Last Name</label>
+                  <input 
+                    type="text" 
+                    disabled={!isEditing} 
+                    value={profileData.last_name} 
+                    onChange={(e) => setProfileData({...profileData, last_name: e.target.value})} 
+                  />
+                </div>
               </div>
               <div className="input-group">
                 <label>Email Address</label>
                 <input 
                   type="email" 
+                  disabled={!isEditing} 
                   value={profileData.email} 
                   onChange={(e) => setProfileData({...profileData, email: e.target.value})} 
                 />
               </div>
-              <button type="submit" className="save-btn">Update Profile</button>
+              <button type="submit" className={`save-btn ${isEditing ? 'confirm' : ''}`}>
+                {isEditing ? 'Save Changes' : 'Edit Profile'}
+              </button>
             </form>
           </section>
 
-          {/* Section 2: Security & Password */}
+          {/* Security Section */}
           <section className="settings-card glass-card">
             <h3>Security</h3>
             <form onSubmit={handlePasswordUpdate}>
@@ -102,6 +187,7 @@ function Settings({ user, setUser }) {
                 <label>Confirm New Password</label>
                 <input 
                   type="password" 
+                  placeholder="••••••••"
                   value={passwordData.confirmPassword}
                   onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
                   required
@@ -111,11 +197,13 @@ function Settings({ user, setUser }) {
             </form>
           </section>
 
-          {/* Section 3: The Danger Zone */}
+          {/* NEW: Danger Zone Section */}
           <section className="settings-card glass-card danger-zone">
             <h3>Danger Zone</h3>
-            <p>Once I delete my account, there is no going back. All my portfolio data will be wiped.</p>
-            <button className="delete-btn">Delete My Account</button>
+            <p>Once you delete your account, there is no going back. All your data will be permanently removed.</p>
+            <button className="delete-btn" onClick={handleDeleteAccount}>
+              Delete My Account
+            </button>
           </section>
         </div>
       </main>
