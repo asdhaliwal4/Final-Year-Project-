@@ -1,8 +1,8 @@
 // src/App.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Added useEffect
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Homepage from './components/Homepage';
-import SignIn from './components/SignIn'; // Imported as SignIn
+import SignIn from './components/SignIn'; 
 import CreateAccount from './components/CreateAccount';
 import Dashboard from './components/Dashboard';
 import InfoPage from './components/InfoPage';
@@ -12,77 +12,86 @@ import Settings from './components/Settings';
 import History from './components/History';
 
 function App() {
-  // Storing the user info here so I can check if they're logged in across the whole site
-  const [user, setUser] = useState(null); 
+  // 1. I'm initializing my user state by checking localStorage first
+  // This is what stops the auto-logout on refresh!
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem("invest_track_user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
+  // 2. I'm updating handleLogin to save the user to the browser storage
   const handleLogin = (userData) => {
     setUser(userData);
+    localStorage.setItem("invest_track_user", JSON.stringify(userData));
   };
   
+  // 3. I'm updating handleLogout to clear the browser storage
   const handleLogout = () => {
     setUser(null);
+    localStorage.removeItem("invest_track_user");
   };
+
+  // 4. This useEffect ensures that if you change your name in Settings, 
+  // the localStorage is also updated so it stays changed on refresh.
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem("invest_track_user", JSON.stringify(user));
+    }
+  }, [user]);
 
   return (
     <BrowserRouter>
-      {/* Adding this so the page snaps back to the top when I click a footer link */}
       <ScrollToTop /> 
 
       <Routes>
-        {/* 1. Homepage */}
         <Route path="/" element={<Homepage user={user} handleLogout={handleLogout} />} />
         
-        {/* 2. Authentication */}
         <Route 
           path="/signin" 
           element={user ? <Navigate to="/dashboard" /> : <SignIn handleLogin={handleLogin} />} 
         />
         <Route path="/create-account" element={<CreateAccount />} />
         
-        {/* 3. Protected Dashboard */}
         <Route 
           path="/dashboard" 
           element={user ? <Dashboard user={user} handleLogout={handleLogout} /> : <Navigate to="/signin" />} 
         />
 
-        {/* 4. Stock Details */}
-        <Route path="/stock/:symbol" element={<StockDetails user={user} />} />
+        {/* I'm protecting StockDetails too so it doesn't crash if user is null */}
+        <Route 
+          path="/stock/:symbol" 
+          element={user ? <StockDetails user={user} /> : <Navigate to="/signin" />} 
+        />
 
-        {/* 5. Protected Settings */}
         <Route 
           path="/settings" 
           element={user ? <Settings user={user} setUser={setUser} /> : <Navigate to="/signin" />} 
         />
 
-        {/* 6. Static Info Pages */}
         <Route path="/about" element={
           <InfoPage title="About Invest & Track">
             <p>Founded in 2026, Invest & Track was built to simplify the complex world of global finance.</p>
             <h2>Our Mission</h2>
-            <p>We believe that everyone should have access to real-time insights into their wealth. Our platform combines live market data with intuitive design to help you make smarter financial decisions.</p>
+            <p>We believe that everyone should have access to real-time insights into their wealth.</p>
           </InfoPage>
         } />
 
         <Route path="/privacy" element={
           <InfoPage title="Privacy Policy">
-            <p>Your privacy is our priority. This policy outlines how we handle your data.</p>
-            <h2>Data Collection</h2>
-            <p>We only collect the essential information required to provide our portfolio tracking services. We never sell your personal data to third parties.</p>
+            <p>Your privacy is our priority.</p>
           </InfoPage>
         } />
 
         <Route path="/terms" element={
           <InfoPage title="Terms of Service">
             <p>By using Invest & Track, you agree to our terms.</p>
-            <h2>Platform Usage</h2>
-            <p>Our tools are for informational purposes only. We are not financial advisors, and all investment decisions are made at your own risk.</p>
           </InfoPage>
         } />
         
         <Route 
           path="/history" 
           element={user ? <History user={user} handleLogout={handleLogout} /> : <Navigate to="/signin" />} 
-/>
+        />
       </Routes>
     </BrowserRouter>
   );
