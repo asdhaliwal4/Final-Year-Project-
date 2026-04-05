@@ -138,3 +138,72 @@
   color: #3b82f6;
   border-color: #3b82f6;
 }
+
+.position-section {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.position-card {
+  padding: 25px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pos-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pos-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+}
+
+.pos-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+}
+
+.pos-stats {
+  display: flex;
+  gap: 40px;
+  text-align: right;
+}
+
+.pos-total {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: white;
+}
+
+.pos-pl {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.pos-pl.profit { color: #22c55e; }
+.pos-pl.loss { color: #ef4444; }
+
+@media (max-width: 768px) {
+  .pos-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+  .pos-stats {
+    width: 100%;
+    justify-content: space-between;
+    text-align: left;
+  }
+}
