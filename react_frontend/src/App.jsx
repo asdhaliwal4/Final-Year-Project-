@@ -10,6 +10,7 @@ import ScrollToTop from './components/ScrollToTop';
 import StockDetails from './components/StockDetails';
 import Settings from './components/Settings';
 import History from './components/History';
+import Watchlist from './components/Watchlist'; 
 
 function App() {
   // 1. I'm initializing my user state by checking localStorage first
@@ -91,6 +92,11 @@ function App() {
         <Route 
           path="/history" 
           element={user ? <History user={user} handleLogout={handleLogout} /> : <Navigate to="/signin" />} 
+        />
+
+        <Route 
+          path="/watchlist" 
+          element={user ? <Watchlist user={user} /> : <Navigate to="/signin" />} 
         />
       </Routes>
     </BrowserRouter>
