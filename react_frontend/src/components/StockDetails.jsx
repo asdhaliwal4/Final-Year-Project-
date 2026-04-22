@@ -130,11 +130,11 @@ function StockDetails({ user }) {
         </div>
 
         <div className="chart-container-glass">
-          {/* NEW: Passing avgPrice to the chart */}
+          {/*  Passing avgPrice to the chart */}
           <StockChart symbol={symbol} apiKey={POLY_KEY} range={range} avgPrice={avgPrice} />
         </div>
 
-        {/* NEW: YOUR POSITION SECTION */}
+        {/*  POSITION SECTION */}
         {userPosition && (
           <section className="position-section fade-in">
             <div className="position-card glass-card">

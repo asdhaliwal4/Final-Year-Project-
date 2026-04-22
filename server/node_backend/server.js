@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import mysql from "mysql2/promise";
 import bcrypt from "bcrypt";
 import axios from "axios";
+import jwt from "jsonwebtoken";
 
 dotenv.config();
 
@@ -30,6 +31,22 @@ app.use(cors({
 
 app.use(express.json());
 
+const authenticateToken = (req, res, next) => {
+  // Get token from the 'Authorisation' header
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (!token) return res.status(401).json({ message: "Access Denied: No Token Provided" });
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ message: "Invalid or Expired Token" });
+    
+    // Attach the user data to the request so other routes can use it
+    req.user = user; 
+    next(); 
+  });
+};
+
 app.get("/", (req, res) => res.send("Node backend is running!"));
 
 // Auth Routes
@@ -42,16 +59,31 @@ app.post("/api/register", async (req, res) => {
     res.status(201).json({ message: "User created!", userId: result.insertId });
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
-
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     const [users] = await pool.query("SELECT * FROM users WHERE email = ?", [email]);
+    
     if (users.length === 0) return res.status(401).json({ message: "Invalid credentials" });
+    
     const user = users[0];
     const isMatch = await bcrypt.compare(password, user.password);
+    
     if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
-    res.status(200).json({ user: { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email } });
+
+    //  Generate JWT Token
+    const token = jwt.sign(
+      { id: user.id, email: user.email }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: "24h" } // Token lasts for 1 day
+    );
+
+    // Send the token back to the frontend
+    res.status(200).json({ 
+      token,
+      user: { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email } 
+    });
+
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
@@ -81,7 +113,7 @@ app.put("/api/user/change-password", async (req, res) => {
 // --- WATCHLIST ROUTES START HERE ---
 
 // 1. Add to Watchlist
-app.post("/api/watchlist/add", async (req, res) => {
+app.post("/api/watchlist/add", authenticateToken, async (req, res) => {
   try {
     const { user_id, symbol } = req.body;
     const sql = "INSERT INTO watchlist (user_id, symbol) VALUES (?, ?)";
@@ -130,7 +162,7 @@ app.get("/api/watchlist/:userId", async (req, res) => {
 // --- WATCHLIST ROUTES END HERE ---
 
 // Portfolio Routes
-app.get("/api/portfolio/:userId", async (req, res) => {
+app.get("/api/portfolio/:userId", authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
     const [assets] = await pool.query("SELECT * FROM assets WHERE user_id = ? AND deleted_at IS NULL", [userId]);
@@ -153,7 +185,7 @@ app.get("/api/portfolio/history/:userId", async (req, res) => {
   } catch (error) { res.status(500).json({ message: "Error fetching history." }); }
 });
 
-app.post("/api/assets/add", async (req, res) => {
+app.post("/api/assets/add", authenticateToken, async (req, res) => {
   try {
     const { user_id, symbol, quantity, purchase_price } = req.body;
     await pool.query(`INSERT INTO assets (user_id, symbol, quantity, purchase_price) VALUES (?, ?, ?, ?)`, [user_id, symbol.toUpperCase(), quantity, purchase_price]);
@@ -161,7 +193,7 @@ app.post("/api/assets/add", async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-app.delete("/api/assets/:id", async (req, res) => {
+app.delete("/api/assets/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     await pool.query("UPDATE assets SET deleted_at = NOW() WHERE id = ?", [id]);

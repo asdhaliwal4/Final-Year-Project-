@@ -40,6 +40,7 @@ function SignIn({ handleLogin }) {
       }
 
       console.log('Login worked:', result);
+      localStorage.setItem('token', result.token);
       handleLogin(result.user);
       navigate('/dashboard'); // Taking me to the dashboard once I'm in
     } catch (error) {

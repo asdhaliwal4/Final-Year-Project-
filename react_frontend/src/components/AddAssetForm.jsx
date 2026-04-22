@@ -15,7 +15,7 @@ function AddAssetForm({ user, prefillSymbol, onComplete }) {
   const [error, setError] = useState("");
   const [isShaking, setIsShaking] = useState(false);
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
     e.preventDefault();
     setError(""); // Reset error
 
@@ -23,19 +23,30 @@ function AddAssetForm({ user, prefillSymbol, onComplete }) {
     if (parseFloat(formData.quantity) <= 0 || parseFloat(formData.purchase_price) <= 0) {
       setError("Please enter values greater than 0");
       setIsShaking(true);
-      
-      // Stop the shake after 500ms so it can be triggered again
       setTimeout(() => setIsShaking(false), 500);
       return;
     }
 
     try {
+      // --- NEW: Grab the token from the vault ---
+      const token = localStorage.getItem('token');
+
       const response = await fetch('https://final-year-project-iaod.onrender.com/api/assets/add', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          // --- NEW: Add the Authorization header ---
+          'Authorization': `Bearer ${token}` 
+        },
         body: JSON.stringify({ ...formData, user_id: user.id }),
       });
       
+      // If the bouncer rejects the token, we can't add the asset
+      if (response.status === 401 || response.status === 403) {
+        setError("Session expired. Please log in again.");
+        return;
+      }
+
       if (response.ok) onComplete();
     } catch (err) {
       setError("Server error. Try again later.");

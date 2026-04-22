@@ -21,10 +21,24 @@ function Dashboard({ user, handleLogout }) {
     );
   }
 
-  const fetchPortfolio = useCallback(() => {
+ const fetchPortfolio = useCallback(() => {
     setLoading(true);
-    fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/${user.id}`)
+    //  Grab the keycard from the vault
+    const token = localStorage.getItem('token');
+
+    fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/${user.id}`, {
+      // Add the headers object here 
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
       .then((res) => {
+        // Security check: if token is invalid, kick to login
+        if (res.status === 401 || res.status === 403) {
+          handleLogout(); 
+          return;
+        }
         if (!res.ok) throw new Error('Failed to fetch portfolio');
         return res.json();
       })
@@ -36,7 +50,7 @@ function Dashboard({ user, handleLogout }) {
         setError(err.message);
         setLoading(false);
       });
-  }, [user.id]);
+  }, [user.id, handleLogout]); // Added handleLogout to dependency array for safety
 
   useEffect(() => {
     fetchPortfolio();
@@ -45,16 +59,28 @@ function Dashboard({ user, handleLogout }) {
   const handleDelete = async (assetId) => {
     if (window.confirm("Are you sure you want to delete this?")) {
       try {
+        // Grab the keycard again
+        const token = localStorage.getItem('token');
+
         const response = await fetch(`https://final-year-project-iaod.onrender.com/api/assets/${assetId}`, {
           method: 'DELETE',
+          // Add the bouncer check here too
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
         });
+
+        if (response.status === 401 || response.status === 403) {
+          handleLogout();
+          return;
+        }
+
         if (response.ok) fetchPortfolio(); 
       } catch (err) {
         console.error("Delete failed:", err);
       }
     }
   };
-
   // Logic to merge stocks so symbols aren't duplicated in the table
   const mergedPortfolio = portfolio.reduce((acc, item) => {
     const symbol = item.symbol;
@@ -187,4 +213,4 @@ function Dashboard({ user, handleLogout }) {
   );
 }
 
-export default Dashboard;
+export default Dashboard; 
