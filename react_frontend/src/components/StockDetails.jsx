@@ -22,21 +22,28 @@ function StockDetails({ user }) {
   const FINN_KEY = import.meta.env.VITE_FINNHUB_KEY;
   const POLY_KEY = import.meta.env.VITE_POLYGON_KEY;
 
-  useEffect(() => {
+useEffect(() => {
     setLoading(true);
+    
+    //  Grab the token from the vault
+    const token = localStorage.getItem('token');
 
     const fetchLive = fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINN_KEY}`).then(res => res.json());
     const fetchMetrics = fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${FINN_KEY}`).then(res => res.json());
     const fetchProfile = fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${FINN_KEY}`).then(res => res.json());
     
-    // Check Watchlist
+    // Updated: Check Watchlist with Token
     const checkWatchlist = user 
-      ? fetch(`https://final-year-project-iaod.onrender.com/api/watchlist/check/${user.id}/${symbol}`).then(res => res.json())
+      ? fetch(`https://final-year-project-iaod.onrender.com/api/watchlist/check/${user.id}/${symbol}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }).then(res => res.json())
       : Promise.resolve({ inWatchlist: false });
 
-    // NEW: Check if user owns this stock to show the Avg Price and Position box
+    //  Updated: Check Position with Token
     const checkPosition = user
-      ? fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/${user.id}`).then(res => res.json())
+      ? fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/${user.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }).then(res => res.json())
       : Promise.resolve([]);
 
     Promise.all([fetchLive, fetchMetrics, fetchProfile, checkWatchlist, checkPosition])
@@ -47,7 +54,9 @@ function StockDetails({ user }) {
         setInWatchlist(watchlistStatus.inWatchlist);
         
         // Find if this symbol is in our portfolio
-        const position = portfolioData.find(item => item.symbol.toUpperCase() === symbol.toUpperCase());
+        const position = Array.isArray(portfolioData) 
+          ? portfolioData.find(item => item.symbol.toUpperCase() === symbol.toUpperCase())
+          : null;
         setUserPosition(position || null);
 
         setLoading(false);
@@ -59,21 +68,27 @@ function StockDetails({ user }) {
   }, [symbol, FINN_KEY, user]);
 
   const toggleWatchlist = async () => {
+    const token = localStorage.getItem('token');
     const method = inWatchlist ? 'DELETE' : 'POST';
     const url = inWatchlist 
       ? `https://final-year-project-iaod.onrender.com/api/watchlist/${user.id}/${symbol}`
       : `https://final-year-project-iaod.onrender.com/api/watchlist/add`;
+    
     try {
       const response = await fetch(url, {
         method: method,
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Added token here
+        },
         body: inWatchlist ? null : JSON.stringify({ user_id: user.id, symbol: symbol })
       });
       if (response.ok) setInWatchlist(!inWatchlist);
     } catch (err) { console.error("Watchlist toggle failed:", err); }
   };
 
-  // NEW: Calculations for the Position Box
+
+  //  Calculations for the Position Box
   const currentPrice = liveData?.c || 0;
   const avgPrice = parseFloat(userPosition?.purchase_price || 0);
   const shares = parseFloat(userPosition?.quantity || 0);
