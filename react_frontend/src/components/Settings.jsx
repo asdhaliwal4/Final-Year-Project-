@@ -3,7 +3,7 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 import './Settings.css';
 
-function Settings({ user, setUser, handleLogout }) { // Added handleLogout prop
+function Settings({ user, setUser, handleLogout }) {
   const [profileData, setProfileData] = useState({
     first_name: user.first_name || '',
     last_name: user.last_name || '',
@@ -28,9 +28,14 @@ function Settings({ user, setUser, handleLogout }) { // Added handleLogout prop
     }
 
     try {
+      const token = localStorage.getItem('token'); // Get the keycard
+
       const response = await fetch('https://final-year-project-iaod.onrender.com/api/user/update-profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Show the keycard
+        },
         body: JSON.stringify({
           id: user.id,
           first_name: profileData.first_name,
@@ -38,6 +43,8 @@ function Settings({ user, setUser, handleLogout }) { // Added handleLogout prop
           email: profileData.email
         }),
       });
+
+      if (response.status === 401 || response.status === 403) return handleLogout();
 
       if (response.ok) {
         setUser({ ...user, ...profileData });
@@ -59,15 +66,22 @@ function Settings({ user, setUser, handleLogout }) { // Added handleLogout prop
     }
 
     try {
+      const token = localStorage.getItem('token'); // Get the keycard
+
       const response = await fetch('https://final-year-project-iaod.onrender.com/api/user/change-password', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}` // Show the keycard
+        },
         body: JSON.stringify({
           id: user.id,
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword
         }),
       });
+
+      if (response.status === 401 || response.status === 403) return handleLogout();
 
       const data = await response.json();
       if (response.ok) {
@@ -81,7 +95,7 @@ function Settings({ user, setUser, handleLogout }) { // Added handleLogout prop
     }
   };
 
-  // 3. NEW: Handle Delete Account
+  // 3. Handle Delete Account
   const handleDeleteAccount = async () => {
     const confirmed = window.confirm(
       "WARNING: This will permanently delete your account and all portfolio data. This action cannot be undone. Are you sure?"
@@ -89,13 +103,20 @@ function Settings({ user, setUser, handleLogout }) { // Added handleLogout prop
 
     if (confirmed) {
       try {
+        const token = localStorage.getItem('token'); // Get the keycard
+
         const response = await fetch(`https://final-year-project-iaod.onrender.com/api/user/${user.id}`, {
           method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}` // Show the keycard
+          }
         });
+
+        if (response.status === 401 || response.status === 403) return handleLogout();
 
         if (response.ok) {
           alert("Account successfully deleted.");
-          handleLogout(); // Clears storage and redirects to sign-in
+          handleLogout(); 
         } else {
           setMessage({ text: 'Could not delete account. Try again later.', type: 'error' });
         }
@@ -107,7 +128,7 @@ function Settings({ user, setUser, handleLogout }) { // Added handleLogout prop
 
   return (
     <div className="settings-page fade-in">
-      <Navbar user={user} />
+      <Navbar user={user} handleLogout={handleLogout} />
       
       <main className="settings-container">
         <header className="settings-header">
@@ -120,7 +141,6 @@ function Settings({ user, setUser, handleLogout }) { // Added handleLogout prop
         )}
 
         <div className="settings-grid">
-          {/* General Profile Section */}
           <section className="settings-card glass-card">
             <h3>General Profile</h3>
             <form onSubmit={handleProfileUpdate}>
@@ -159,7 +179,6 @@ function Settings({ user, setUser, handleLogout }) { // Added handleLogout prop
             </form>
           </section>
 
-          {/* Security Section */}
           <section className="settings-card glass-card">
             <h3>Security</h3>
             <form onSubmit={handlePasswordUpdate}>
@@ -197,7 +216,6 @@ function Settings({ user, setUser, handleLogout }) { // Added handleLogout prop
             </form>
           </section>
 
-          {/* NEW: Danger Zone Section */}
           <section className="settings-card glass-card danger-zone">
             <h3>Danger Zone</h3>
             <p>Once you delete your account, there is no going back. All your data will be permanently removed.</p>

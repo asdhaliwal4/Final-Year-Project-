@@ -2,27 +2,54 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from './Navbar';
 import Footer from './Footer';
-import './Dashboard.css'; // Reusing your table styles
+import './Dashboard.css'; 
 
-function Watchlist({ user }) {
+function Watchlist({ user, handleLogout }) { // Added handleLogout here
   const [stocks, setStocks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`https://final-year-project-iaod.onrender.com/api/watchlist/${user.id}`)
-      .then(res => res.json())
+    // 1. Grab the token
+    const token = localStorage.getItem('token');
+
+    fetch(`https://final-year-project-iaod.onrender.com/api/watchlist/${user.id}`, {
+      // 2. Show the token to the backend
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => {
+        // 3. Check for expired session
+        if (res.status === 401 || res.status === 403) {
+          handleLogout();
+          return;
+        }
+        return res.json();
+      })
       .then(data => {
-        setStocks(data);
+        setStocks(data || []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [user.id]);
+  }, [user.id, handleLogout]);
 
   const handleRemove = async (symbol) => {
     try {
+      const token = localStorage.getItem('token'); // Grab token for delete
+
       const res = await fetch(`https://final-year-project-iaod.onrender.com/api/watchlist/${user.id}/${symbol}`, {
-        method: 'DELETE'
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}` // Show the token here too
+        }
       });
+
+      if (res.status === 401 || res.status === 403) {
+        handleLogout();
+        return;
+      }
+
       if (res.ok) {
         setStocks(stocks.filter(s => s.symbol !== symbol));
       }
@@ -33,7 +60,7 @@ function Watchlist({ user }) {
 
   return (
     <div className="dashboard-page fade-in">
-      <Navbar user={user} />
+      <Navbar user={user} handleLogout={handleLogout} />
       <main className="dashboard-content">
         <header className="dashboard-header">
            <Link to="/dashboard" className="action-link" style={{marginBottom: '10px'}}>← Back to Portfolio</Link>

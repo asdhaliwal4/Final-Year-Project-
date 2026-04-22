@@ -2,25 +2,41 @@ import React, { useState, useEffect } from 'react';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import { Link } from 'react-router-dom';
-import './Dashboard.css'; // I'll reuse my dashboard styles to keep it consistent
+import './Dashboard.css'; 
 
 function History({ user, handleLogout }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // I'm fetching my removed assets from a new history endpoint
-    fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/history/${user.id}`)
-      .then(res => res.json())
+    // 1. Grab the token from the vault
+    const token = localStorage.getItem('token');
+
+    fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/history/${user.id}`, {
+      // 2. Add the Authorization header
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    })
+      .then(res => {
+        // 3. Security check: if token is invalid or expired, log out
+        if (res.status === 401 || res.status === 403) {
+          handleLogout();
+          return;
+        }
+        if (!res.ok) throw new Error('Failed to fetch history');
+        return res.json();
+      })
       .then(data => {
-        setHistory(data);
+        setHistory(data || []);
         setLoading(false);
       })
       .catch(err => {
         console.error("My history fetch failed:", err);
         setLoading(false);
       });
-  }, [user.id]);
+  }, [user.id, handleLogout]); // Added handleLogout to dependencies
 
   return (
     <div className="dashboard-page fade-in">
@@ -54,7 +70,6 @@ function History({ user, handleLogout }) {
                     <td>{parseFloat(item.quantity).toFixed(2)}</td>
                     <td>${parseFloat(item.purchase_price).toFixed(2)}</td>
                     <td>{new Date(item.created_at).toLocaleDateString('en-GB')}</td>
-                    {/* I'm showing the date I deleted the asset here */}
                     <td className="date-removed">
                       {new Date(item.deleted_at || Date.now()).toLocaleDateString('en-GB')}
                     </td>
