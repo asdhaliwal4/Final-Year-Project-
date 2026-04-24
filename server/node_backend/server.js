@@ -227,16 +227,11 @@ app.delete("/api/user/:id", async (req, res) => {
   } catch (error) { res.status(500).json({ error: "Delete error." }); }
 });
 
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
-
-// Corrected Route: Uses 'pool' and 'assets' table
 app.delete("/api/portfolio/remove-all/:symbol", authenticateToken, async (req, res) => {
   const { symbol } = req.params;
   const userId = req.user.id; 
 
   try {
-    // 1. Changed 'db' to 'pool' to match your connection
-    // 2. Changed 'portfolio' to 'assets' to match your MySQL table
     const [result] = await pool.query(
       "UPDATE assets SET deleted_at = NOW() WHERE user_id = ? AND symbol = ? AND deleted_at IS NULL",
       [userId, symbol.toUpperCase()]
@@ -253,5 +248,4 @@ app.delete("/api/portfolio/remove-all/:symbol", authenticateToken, async (req, r
   }
 });
 
-// Move this line to the VERY bottom of the file
-app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
