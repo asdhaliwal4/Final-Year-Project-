@@ -129,7 +129,7 @@ function Dashboard({ user, handleLogout }) {
           
           <div className="secondary-actions">
             <Link to="/history" className="action-link">View History →</Link>
-            <Link to="/watchlist" className="action-link">My Watchlist 👁️</Link>
+            <Link to="/watchlist" className="action-link">My Watchlist →</Link>
           </div>
         </div>
 
@@ -184,7 +184,9 @@ function Dashboard({ user, handleLogout }) {
                     </td>
                     <td>
                       {/* Changed from item.id to item.symbol to clear all shares */}
-                      <button className="remove-btn" onClick={() => handleDelete(item.symbol)}>Remove</button>
+                      <button className="remove-btn" onClick={() => handleDelete(item.symbol)}>
+  Remove
+</button>   
                     </td>
                   </tr>
                 ))}
