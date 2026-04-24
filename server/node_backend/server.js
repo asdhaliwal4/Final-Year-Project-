@@ -229,16 +229,17 @@ app.delete("/api/user/:id", async (req, res) => {
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
 
-// Route to remove all purchases of a specific stock
+// Corrected Route: Uses 'pool' and 'assets' table
 app.delete("/api/portfolio/remove-all/:symbol", authenticateToken, async (req, res) => {
   const { symbol } = req.params;
   const userId = req.user.id; 
 
   try {
-    // This marks every entry of this stock as 'deleted' for this user
-    const [result] = await db.query(
-      "UPDATE portfolio SET deleted_at = NOW() WHERE user_id = ? AND symbol = ? AND deleted_at IS NULL",
-      [userId, symbol]
+    // 1. Changed 'db' to 'pool' to match your connection
+    // 2. Changed 'portfolio' to 'assets' to match your MySQL table
+    const [result] = await pool.query(
+      "UPDATE assets SET deleted_at = NOW() WHERE user_id = ? AND symbol = ? AND deleted_at IS NULL",
+      [userId, symbol.toUpperCase()]
     );
 
     if (result.affectedRows === 0) {
@@ -251,3 +252,6 @@ app.delete("/api/portfolio/remove-all/:symbol", authenticateToken, async (req, r
     res.status(500).json({ message: "Internal server error" });
   }
 });
+
+// Move this line to the VERY bottom of the file
+app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
