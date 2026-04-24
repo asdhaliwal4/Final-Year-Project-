@@ -12,29 +12,17 @@ function Dashboard({ user, handleLogout }) {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  if (!user) {
-    return (
-      <div className="loading-screen">
-        <div className="spinner"></div>
-        <p>Loading your profile...</p>
-      </div>
-    );
-  }
-
- const fetchPortfolio = useCallback(() => {
+  const fetchPortfolio = useCallback(() => {
     setLoading(true);
-    //  Grab the keycard from the vault
     const token = localStorage.getItem('token');
 
     fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/${user.id}`, {
-      // Add the headers object here 
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     })
       .then((res) => {
-        // Security check: if token is invalid, kick to login
         if (res.status === 401 || res.status === 403) {
           handleLogout(); 
           return;
@@ -50,21 +38,20 @@ function Dashboard({ user, handleLogout }) {
         setError(err.message);
         setLoading(false);
       });
-  }, [user.id, handleLogout]); // Added handleLogout to dependency array for safety
+  }, [user.id, handleLogout]);
 
   useEffect(() => {
-    fetchPortfolio();
-  }, [fetchPortfolio]);
+    if (user) fetchPortfolio();
+  }, [user, fetchPortfolio]);
 
-  const handleDelete = async (assetId) => {
-    if (window.confirm("Are you sure you want to delete this?")) {
+  // Function to remove all holdings of a specific stock
+  const handleDelete = async (symbol) => {
+    if (window.confirm(`Are you sure you want to remove all ${symbol} shares?`)) {
       try {
-        // Grab the keycard again
         const token = localStorage.getItem('token');
 
-        const response = await fetch(`https://final-year-project-iaod.onrender.com/api/assets/${assetId}`, {
+        const response = await fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/remove-all/${symbol}`, {
           method: 'DELETE',
-          // Add the bouncer check here too
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -75,13 +62,16 @@ function Dashboard({ user, handleLogout }) {
           return;
         }
 
-        if (response.ok) fetchPortfolio(); 
+        if (response.ok) {
+          fetchPortfolio(); 
+        }
       } catch (err) {
         console.error("Delete failed:", err);
       }
     }
   };
-  // Logic to merge stocks so symbols aren't duplicated in the table
+
+  // Merge logic to combine multiple purchases of the same stock
   const mergedPortfolio = portfolio.reduce((acc, item) => {
     const symbol = item.symbol;
     
@@ -90,14 +80,11 @@ function Dashboard({ user, handleLogout }) {
         ...item,
         quantity: parseFloat(item.quantity),
         total_cost: parseFloat(item.quantity) * parseFloat(item.purchase_price),
-        ids: [item.id],
         date_added: item.created_at || new Date().toISOString()
       };
     } else {
       acc[symbol].quantity += parseFloat(item.quantity);
       acc[symbol].total_cost += parseFloat(item.quantity) * parseFloat(item.purchase_price);
-      acc[symbol].ids.push(item.id);
-      
       acc[symbol].total_value = acc[symbol].quantity * parseFloat(item.current_price);
       acc[symbol].gain_loss = (acc[symbol].total_value - acc[symbol].total_cost).toFixed(2);
     }
@@ -112,6 +99,8 @@ function Dashboard({ user, handleLogout }) {
   });
 
   const totalValue = portfolio.reduce((sum, item) => sum + parseFloat(item.total_value || 0), 0);
+
+  if (!user) return <div className="loading-screen"><div className="spinner"></div></div>;
 
   return (
     <div className="dashboard-page fade-in">
@@ -130,7 +119,6 @@ function Dashboard({ user, handleLogout }) {
           </h2>
         </div>
 
-        {/* UPDATED ACTION BAR */}
         <div className="action-bar">
           <button 
             onClick={() => setShowForm(!showForm)} 
@@ -140,12 +128,8 @@ function Dashboard({ user, handleLogout }) {
           </button>
           
           <div className="secondary-actions">
-            <Link to="/history" className="action-link">
-              View History →
-            </Link>
-            <Link to="/watchlist" className="action-link">
-              My Watchlist 👁️
-            </Link>
+            <Link to="/history" className="action-link">View History →</Link>
+            <Link to="/watchlist" className="action-link">My Watchlist 👁️</Link>
           </div>
         </div>
 
@@ -191,15 +175,16 @@ function Dashboard({ user, handleLogout }) {
                     <td>{item.quantity.toFixed(2)}</td>
                     <td>${item.weighted_avg_price}</td>
                     <td className="live-price">${parseFloat(item.current_price).toFixed(2)}</td>
-                    <td>${parseFloat(item.total_value).toFixed(2)}</td>
-                    <td className={item.gain_loss >= 0 ? 'profit' : 'loss'}>
-                      {item.gain_loss >= 0 ? '+' : ''}{item.gain_loss}
+                    <td>${(item.quantity * parseFloat(item.current_price)).toFixed(2)}</td>
+                    <td className={parseFloat(item.gain_loss) >= 0 ? 'profit' : 'loss'}>
+                      {parseFloat(item.gain_loss) >= 0 ? '+' : ''}{item.gain_loss}
                     </td>
                     <td className="date-cell">
                       {new Date(item.date_added).toLocaleDateString('en-GB')}
                     </td>
                     <td>
-                      <button className="remove-btn" onClick={() => handleDelete(item.ids[0])}>Remove</button>
+                      {/* Changed from item.id to item.symbol to clear all shares */}
+                      <button className="remove-btn" onClick={() => handleDelete(item.symbol)}>Remove</button>
                     </td>
                   </tr>
                 ))}
@@ -213,4 +198,4 @@ function Dashboard({ user, handleLogout }) {
   );
 }
 
-export default Dashboard; 
+export default Dashboard;

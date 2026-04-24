@@ -13,7 +13,6 @@ function StockDetails({ user }) {
   const [metrics, setMetrics] = useState(null); 
   const [loading, setLoading] = useState(true);
   
-  // NEW: State for the user's specific holding in this stock
   const [userPosition, setUserPosition] = useState(null);
   const [inWatchlist, setInWatchlist] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -22,24 +21,24 @@ function StockDetails({ user }) {
   const FINN_KEY = import.meta.env.VITE_FINNHUB_KEY;
   const POLY_KEY = import.meta.env.VITE_POLYGON_KEY;
 
-useEffect(() => {
+  useEffect(() => {
     setLoading(true);
     
-    //  Grab the token from the vault
+    // Grab the token for secure requests
     const token = localStorage.getItem('token');
 
     const fetchLive = fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINN_KEY}`).then(res => res.json());
     const fetchMetrics = fetch(`https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${FINN_KEY}`).then(res => res.json());
     const fetchProfile = fetch(`https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${FINN_KEY}`).then(res => res.json());
     
-    // Updated: Check Watchlist with Token
+    // Check if the stock is on the user watchlist
     const checkWatchlist = user 
       ? fetch(`https://final-year-project-iaod.onrender.com/api/watchlist/check/${user.id}/${symbol}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         }).then(res => res.json())
       : Promise.resolve({ inWatchlist: false });
 
-    //  Updated: Check Position with Token
+    // Fetch user portfolio data to check for holdings
     const checkPosition = user
       ? fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/${user.id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -53,11 +52,26 @@ useEffect(() => {
         setOverview(profileData);
         setInWatchlist(watchlistStatus.inWatchlist);
         
-        // Find if this symbol is in our portfolio
-        const position = Array.isArray(portfolioData) 
-          ? portfolioData.find(item => item.symbol.toUpperCase() === symbol.toUpperCase())
-          : null;
-        setUserPosition(position || null);
+        // Filter for all purchases of this specific stock
+        const matchingAssets = Array.isArray(portfolioData) 
+          ? portfolioData.filter(item => item.symbol.toUpperCase() === symbol.toUpperCase())
+          : [];
+
+        if (matchingAssets.length > 0) {
+          // Sum up total shares and total cost across all entries
+          const totalQuantity = matchingAssets.reduce((sum, asset) => sum + parseFloat(asset.quantity), 0);
+          const totalCost = matchingAssets.reduce((sum, asset) => 
+            sum + (parseFloat(asset.quantity) * parseFloat(asset.purchase_price)), 0);
+          
+          // Set position with aggregated quantity and weighted average price
+          setUserPosition({
+            quantity: totalQuantity,
+            purchase_price: totalCost / totalQuantity 
+          });
+        } else {
+          // No holdings for this stock found
+          setUserPosition(null);
+        }
 
         setLoading(false);
       })
@@ -79,7 +93,7 @@ useEffect(() => {
         method: method,
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Added token here
+          'Authorization': `Bearer ${token}`
         },
         body: inWatchlist ? null : JSON.stringify({ user_id: user.id, symbol: symbol })
       });
@@ -87,8 +101,6 @@ useEffect(() => {
     } catch (err) { console.error("Watchlist toggle failed:", err); }
   };
 
-
-  //  Calculations for the Position Box
   const currentPrice = liveData?.c || 0;
   const avgPrice = parseFloat(userPosition?.purchase_price || 0);
   const shares = parseFloat(userPosition?.quantity || 0);
@@ -145,11 +157,9 @@ useEffect(() => {
         </div>
 
         <div className="chart-container-glass">
-          {/*  Passing avgPrice to the chart */}
           <StockChart symbol={symbol} apiKey={POLY_KEY} range={range} avgPrice={avgPrice} />
         </div>
 
-        {/*  POSITION SECTION */}
         {userPosition && (
           <section className="position-section fade-in">
             <div className="position-card glass-card">
