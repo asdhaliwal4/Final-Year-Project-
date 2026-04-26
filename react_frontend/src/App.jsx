@@ -13,26 +13,26 @@ import History from './components/History';
 import Watchlist from './components/Watchlist'; 
 
 function App() {
-  // 1. I'm initializing my user state by checking localStorage first
+  // I'm initializing my user state by checking localStorage first
   // This is what stops the auto-logout on refresh!
   const [user, setUser] = useState(() => {
     const savedUser = localStorage.getItem("invest_track_user");
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  // 2. I'm updating handleLogin to save the user to the browser storage
+  // I'm updating handleLogin to save the user to the browser storage
   const handleLogin = (userData) => {
     setUser(userData);
     localStorage.setItem("invest_track_user", JSON.stringify(userData));
   };
   
-  // 3. I'm updating handleLogout to clear the browser storage
+  // I'm updating handleLogout to clear the browser storage
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem("invest_track_user");
   };
 
-  // 4. This useEffect ensures that if you change your name in Settings, 
+  // This useEffect ensures that if you change your name in Settings, 
   // the localStorage is also updated so it stays changed on refresh.
   useEffect(() => {
     if (user) {
