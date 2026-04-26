@@ -2,6 +2,16 @@ Invest & Track: Portfolio Management System
 
 Live Application: https://final-year-frontend-e5gb.onrender.com/
 
+
+System Requirements
+To run this project locally, the examiner only needs the following:
+
+Database: Any MySQL server (version 8.0 or higher). This can be a local instance (e.g., via XAMPP or MySQL Workbench) or a cloud instance.
+
+Node.js: version 16 or higher.
+
+Internet Connection: Required for the frontend to communicate with the live API and for fetching market data.
+
 Database Setup (Fresh Environment)
 The project utilises a MySQL database (hosted on Aiven for production). To initialise a fresh database for testing:
 
@@ -9,45 +19,42 @@ Create Database: Create a new MySQL schema named defaultdb.
 
 Here is the SQL you need to create the database:
 
--- defaultdb.assets definition
-
-CREATE TABLE "assets" (
-  "id" int NOT NULL AUTO_INCREMENT,
-  "user_id" int NOT NULL,
-  "symbol" varchar(10) NOT NULL,
-  "quantity" decimal(15,2) NOT NULL,
-  "purchase_price" decimal(15,2) NOT NULL,
-  "created_at" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  "deleted_at" timestamp NULL DEFAULT NULL,
-  PRIMARY KEY ("id"),
-  KEY "user_id" ("user_id"),
-  CONSTRAINT "assets_ibfk_1" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
+-- 1. Create Users Table
+CREATE TABLE users (
+  id int NOT NULL AUTO_INCREMENT,
+  first_name varchar(255) NOT NULL,
+  last_name varchar(255) NOT NULL,
+  date_of_birth date DEFAULT NULL,
+  email varchar(255) NOT NULL,
+  password varchar(255) NOT NULL,
+  created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY email (email)
 );
 
--- defaultdb.users definition
-
-CREATE TABLE "users" (
-  "id" int NOT NULL AUTO_INCREMENT,
-  "first_name" varchar(255) NOT NULL,
-  "last_name" varchar(255) NOT NULL,
-  "date_of_birth" date DEFAULT NULL,
-  "email" varchar(255) NOT NULL,
-  "password" varchar(255) NOT NULL,
-  "created_at" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY ("id"),
-  UNIQUE KEY "email" ("email")
+-- 2. Create Assets Table
+CREATE TABLE assets (
+  id int NOT NULL AUTO_INCREMENT,
+  user_id int NOT NULL,
+  symbol varchar(10) NOT NULL,
+  quantity decimal(15,2) NOT NULL,
+  purchase_price decimal(15,2) NOT NULL,
+  created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  deleted_at timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (id),
+  KEY user_id (user_id),
+  CONSTRAINT assets_ibfk_1 FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
--- defaultdb.watchlist definition
-
-CREATE TABLE "watchlist" (
-  "id" int NOT NULL AUTO_INCREMENT,
-  "user_id" int NOT NULL,
-  "symbol" varchar(10) NOT NULL,
-  "created_at" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY ("id"),
-  UNIQUE KEY "unique_user_symbol" ("user_id","symbol"),
-  CONSTRAINT "watchlist_ibfk_1" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
+-- 3. Create Watchlist Table
+CREATE TABLE watchlist (
+  id int NOT NULL AUTO_INCREMENT,
+  user_id int NOT NULL,
+  symbol varchar(10) NOT NULL,
+  created_at timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY unique_user_symbol (user_id, symbol),
+  CONSTRAINT watchlist_ibfk_1 FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
 );
 
 
