@@ -1,16 +1,89 @@
-# React + Vite
+Invest & Track: Portfolio Management System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Live Application: https://final-year-frontend-e5gb.onrender.com/
 
-Currently, two official plugins are available:
+Database Setup (Fresh Environment)
+The project utilises a MySQL database (hosted on Aiven for production). To initialise a fresh database for testing:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Create Database: Create a new MySQL schema named defaultdb.
 
-## React Compiler
+Here is the SQL you need to create the database:
 
-The React Compiler is not enabled on this template. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+-- defaultdb.assets definition
 
-## Expanding the ESLint configuration
+CREATE TABLE "assets" (
+  "id" int NOT NULL AUTO_INCREMENT,
+  "user_id" int NOT NULL,
+  "symbol" varchar(10) NOT NULL,
+  "quantity" decimal(15,2) NOT NULL,
+  "purchase_price" decimal(15,2) NOT NULL,
+  "created_at" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  "deleted_at" timestamp NULL DEFAULT NULL,
+  PRIMARY KEY ("id"),
+  KEY "user_id" ("user_id"),
+  CONSTRAINT "assets_ibfk_1" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
+);
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+-- defaultdb.users definition
+
+CREATE TABLE "users" (
+  "id" int NOT NULL AUTO_INCREMENT,
+  "first_name" varchar(255) NOT NULL,
+  "last_name" varchar(255) NOT NULL,
+  "date_of_birth" date DEFAULT NULL,
+  "email" varchar(255) NOT NULL,
+  "password" varchar(255) NOT NULL,
+  "created_at" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("id"),
+  UNIQUE KEY "email" ("email")
+);
+
+-- defaultdb.watchlist definition
+
+CREATE TABLE "watchlist" (
+  "id" int NOT NULL AUTO_INCREMENT,
+  "user_id" int NOT NULL,
+  "symbol" varchar(10) NOT NULL,
+  "created_at" timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY ("id"),
+  UNIQUE KEY "unique_user_symbol" ("user_id","symbol"),
+  CONSTRAINT "watchlist_ibfk_1" FOREIGN KEY ("user_id") REFERENCES "users" ("id") ON DELETE CASCADE
+);
+
+
+
+Frontend Environment ConfigurationTo run the React application, you must create a .env file in the react_frontend/ directory. 
+
+Because this project uses Vite, all variables must be prefixed with VITE_ to be accessible within the browser environment.
+Create a file named .env and include the following variables (using your own private keys from the respective providers): VITE_FINNHUB_KEY= your_own_key        --    Used for real-time stock searching and data lookups on the frontend.
+VITE_ALPHAVANTAGE_KEY= your_own_key   --    Utilised for supplementary market data and global stock identifiers.
+VITE_POLYGON_KEY= your_own_key        --    Required to fetch historical price data for the interactive 1W, 1M, and 1Y charts.
+ 
+Backend Environment Configuration
+The backend server requires a .env file in the server/node_backend/ directory to manage sensitive credentials and database connection strings. This file is not pushed to version control to prevent security breaches.
+
+Create a file named .env and include the following variables:
+
+PORT            -- The local port on which the Express server runs (default is 5000).
+DB_HOST         -- The hostname provided by the Aiven console to access your MySQL instance.
+DB_USER         -- Your database username
+DB_PASSWORD     -- The secure password required to authenticate with the remote database.
+DB_NAME         -- The specific schema name within MySQL (e.g., defaultdb).
+JWT_SECRET      -- A private "key" used to sign and verify JSON Web Tokens for user login.
+FINNHUB_API_KEY -- The API key used by the backend to fetch real-time market data securely.
+
+
+
+Installation & Running Locally
+1. Backend Setup
+
+cd server/node_backend
+npm install
+npm run dev
+
+2. Frontend Setup
+Bash
+cd react_frontend
+npm install
+npm run dev
+

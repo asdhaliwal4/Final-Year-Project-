@@ -13,18 +13,18 @@ function Dashboard({ user, handleLogout }) {
   const [showForm, setShowForm] = useState(false);
 
   const fetchPortfolio = useCallback(() => {
-    // Unique key for this user's data in the browser vault
+    // I create a unique key for this specific user so their data stays in the right "vault"
     const CACHE_KEY = `portfolio_cache_${user.id}`;
-    // Set cache life to 5 minutes
+    // I've decided to keep the data fresh for 5 minutes before I ask the server again
     const CACHE_DURATION = 5 * 60 * 1000; 
 
-    // Check if we have a saved version of the portfolio in the browser
+    // I start by checking if I already have a recent version of the portfolio in the browser
     const savedCache = localStorage.getItem(CACHE_KEY);
     if (savedCache) {
       const { data, timestamp } = JSON.parse(savedCache);
       const isFresh = Date.now() - timestamp < CACHE_DURATION;
 
-      // If the saved data is still fresh, use it and stop the function
+      // If the saved data is still fresh, I'll just use it and stop here to save API calls
       if (isFresh) {
         setPortfolio(data);
         setLoading(false);
@@ -32,7 +32,7 @@ function Dashboard({ user, handleLogout }) {
       }
     }
 
-    // If no fresh cache exists, fetch from the live server
+    // If I don't have a fresh copy, I'll put the app in a loading state and fetch from the server
     setLoading(true);
     const token = localStorage.getItem('token');
 
@@ -43,6 +43,7 @@ function Dashboard({ user, handleLogout }) {
       }
     })
       .then((res) => {
+        // I check for security issues—if the user isn't authorised, I log them out immediately
         if (res.status === 401 || res.status === 403) {
           handleLogout(); 
           return;
@@ -52,7 +53,7 @@ function Dashboard({ user, handleLogout }) {
       })
       .then((data) => {
         setPortfolio(data);
-        // Save the fresh data and current time to the browser vault
+        // I save a fresh copy of the data and the current time into the browser vault
         localStorage.setItem(CACHE_KEY, JSON.stringify({
           data: data,
           timestamp: Date.now()
@@ -66,10 +67,12 @@ function Dashboard({ user, handleLogout }) {
   }, [user.id, handleLogout]);
 
   useEffect(() => {
+    // I only fetch the data if a valid user is actually logged in
     if (user) fetchPortfolio();
   }, [user, fetchPortfolio]);
 
   const handleDelete = async (symbol) => {
+    // I make sure to double-check with the user before I remove all holdings of a stock
     if (window.confirm(`Are you sure you want to remove all ${symbol} shares?`)) {
       try {
         const token = localStorage.getItem('token');
@@ -87,7 +90,7 @@ function Dashboard({ user, handleLogout }) {
         }
 
         if (response.ok) {
-          // Clear the cache so the deleted stock stays gone on refresh
+          // I clear the cache now so that the deleted stock doesn't "ghost" back on the next refresh
           localStorage.removeItem(`portfolio_cache_${user.id}`);
           fetchPortfolio(); 
         }
@@ -97,10 +100,12 @@ function Dashboard({ user, handleLogout }) {
     }
   };
 
+  // I use this section to combine multiple purchases of the same stock into one single row
   const mergedPortfolio = portfolio.reduce((acc, item) => {
     const symbol = item.symbol;
     
     if (!acc[symbol]) {
+      // If I haven't seen this stock yet, I create a new entry for it
       acc[symbol] = {
         ...item,
         quantity: parseFloat(item.quantity),
@@ -108,6 +113,7 @@ function Dashboard({ user, handleLogout }) {
         date_added: item.created_at || new Date().toISOString()
       };
     } else {
+      // If I've already seen this stock, I add the new quantity and cost to the existing total
       acc[symbol].quantity += parseFloat(item.quantity);
       acc[symbol].total_cost += parseFloat(item.quantity) * parseFloat(item.purchase_price);
       acc[symbol].total_value = acc[symbol].quantity * parseFloat(item.current_price);
@@ -116,6 +122,7 @@ function Dashboard({ user, handleLogout }) {
     return acc;
   }, {});
 
+  // I map over the combined stocks to calculate the weighted average price for each one
   const displayPortfolio = Object.values(mergedPortfolio).map(stock => {
     return {
       ...stock,
@@ -123,6 +130,7 @@ function Dashboard({ user, handleLogout }) {
     };
   });
 
+  // I calculate the total value of the entire portfolio here
   const totalValue = portfolio.reduce((sum, item) => sum + parseFloat(item.total_value || 0), 0);
 
   if (!user) return <div className="loading-screen"><div className="spinner"></div></div>;
@@ -163,7 +171,7 @@ function Dashboard({ user, handleLogout }) {
             <AddAssetForm 
               user={user} 
               onComplete={() => {
-                // Wipe the cache so the new asset appears immediately
+                // I wipe the cache so the new asset shows up in the table immediately
                 localStorage.removeItem(`portfolio_cache_${user.id}`);
                 setShowForm(false);
                 fetchPortfolio(); 
