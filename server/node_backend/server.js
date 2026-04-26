@@ -169,7 +169,7 @@ app.get("/api/portfolio/:userId", authenticateToken, async (req, res) => {
     const portfolioWithPrices = await Promise.all(assets.map(async (asset) => {
       try {
         const response = await axios.get(`https://finnhub.io/api/v1/quote?symbol=${asset.symbol.toUpperCase()}&token=${process.env.FINNHUB_API_KEY}`);
-        const currentPrice = response.data.c || 0;
+        cconst currentPrice = response.data.c || asset.purchase_price || 0;
         return { ...asset, current_price: currentPrice, total_value: (currentPrice * asset.quantity).toFixed(2), gain_loss: ((currentPrice - asset.purchase_price) * asset.quantity).toFixed(2) };
       } catch (err) { return { ...asset, current_price: 0 }; }
     }));
