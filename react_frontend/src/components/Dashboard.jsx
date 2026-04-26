@@ -92,7 +92,11 @@ function Dashboard({ user, handleLogout }) {
         if (response.ok) {
           // I clear the cache now so that the deleted stock doesn't "ghost" back on the next refresh
           localStorage.removeItem(`portfolio_cache_${user.id}`);
-          fetchPortfolio(); 
+          
+          // I add a tiny delay here too just to ensure the deletion is fully processed
+          setTimeout(() => {
+            fetchPortfolio(); 
+          }, 500);
         }
       } catch (err) {
         console.error("Delete failed:", err);
@@ -103,22 +107,29 @@ function Dashboard({ user, handleLogout }) {
   // I use this section to combine multiple purchases of the same stock into one single row
   const mergedPortfolio = portfolio.reduce((acc, item) => {
     const symbol = item.symbol;
+    const q = parseFloat(item.quantity);
+    const p = parseFloat(item.purchase_price);
+    const cp = parseFloat(item.current_price || 0);
     
     if (!acc[symbol]) {
-      // If I haven't seen this stock yet, I create a new entry for it
+      // If I haven't seen this stock yet, I create a new entry for it and calculate initial totals
       acc[symbol] = {
         ...item,
-        quantity: parseFloat(item.quantity),
-        total_cost: parseFloat(item.quantity) * parseFloat(item.purchase_price),
+        quantity: q,
+        total_cost: q * p,
+        total_value: q * cp,
         date_added: item.created_at || new Date().toISOString()
       };
     } else {
-      // If I've already seen this stock, I add the new quantity and cost to the existing total
-      acc[symbol].quantity += parseFloat(item.quantity);
-      acc[symbol].total_cost += parseFloat(item.quantity) * parseFloat(item.purchase_price);
-      acc[symbol].total_value = acc[symbol].quantity * parseFloat(item.current_price);
-      acc[symbol].gain_loss = (acc[symbol].total_value - acc[symbol].total_cost).toFixed(2);
+      // If I've already seen this stock, I add the new quantity and cost to the running total
+      acc[symbol].quantity += q;
+      acc[symbol].total_cost += q * p;
+      acc[symbol].total_value = acc[symbol].quantity * cp;
     }
+    
+    // I calculate the total gain or loss for the combined position
+    acc[symbol].gain_loss = (acc[symbol].total_value - acc[symbol].total_cost).toFixed(2);
+    
     return acc;
   }, {});
 
@@ -171,10 +182,15 @@ function Dashboard({ user, handleLogout }) {
             <AddAssetForm 
               user={user} 
               onComplete={() => {
-                // I wipe the cache so the new asset shows up in the table immediately
+                // I wipe the cache so the dashboard is forced to get fresh data from the server
                 localStorage.removeItem(`portfolio_cache_${user.id}`);
                 setShowForm(false);
-                fetchPortfolio(); 
+                
+                // I wait 500ms to give the Aiven database enough time to finish the update
+                // before I ask for the new list. This fixes the "no immediate update" issue.
+                setTimeout(() => {
+                  fetchPortfolio(); 
+                }, 500);
               }} 
             />
           </div>
@@ -220,7 +236,7 @@ function Dashboard({ user, handleLogout }) {
                     <td>
                       <button className="remove-btn" onClick={() => handleDelete(item.symbol)}>
                         Remove
-                      </button>   
+                      </button>   
                     </td>
                   </tr>
                 ))}
