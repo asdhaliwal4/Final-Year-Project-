@@ -1,10 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ReferenceLine, Label } from 'recharts';
 
-function StockChart({ symbol, apiKey, range, avgPrice }) { // Added avgPrice prop
+function StockChart({ symbol, apiKey, range, avgPrice }) { 
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
+    // Unique key so 1W and 1M data don't get mixed up
+    const CACHE_KEY = `chart_${symbol}_${range}`;
+    // Historical data doesn't change often, so we can cache for 1 hour
+    const CACHE_DURATION = 60 * 60 * 1000; 
+
+    // Check if we already have this chart saved in the browser
+    const cachedData = localStorage.getItem(CACHE_KEY);
+    if (cachedData) {
+      const { data, timestamp } = JSON.parse(cachedData);
+      const isFresh = Date.now() - timestamp < CACHE_DURATION;
+
+      if (isFresh) {
+        setChartData(data);
+        return; // Stop here and use the saved data
+      }
+    }
+
+    // Otherwise, prepare the dates for a fresh API call
     const to = new Date().toISOString().split('T')[0];
     const fromDate = new Date();
 
@@ -22,6 +40,13 @@ function StockChart({ symbol, apiKey, range, avgPrice }) { // Added avgPrice pro
             date: new Date(item.t).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' }),
             price: item.c
           }));
+          
+          // Save the fresh chart to the browser vault
+          localStorage.setItem(CACHE_KEY, JSON.stringify({
+            data: formatted,
+            timestamp: Date.now()
+          }));
+
           setChartData(formatted);
         }
       })
@@ -46,7 +71,7 @@ function StockChart({ symbol, apiKey, range, avgPrice }) { // Added avgPrice pro
             axisLine={false} 
             tickLine={false} 
             tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 11 }} 
-            interval={Math.floor(chartData.length / 6)} 
+            interval={Math.floor(chartData.length / 6) || 0} 
             dy={15} 
           />
 
@@ -70,7 +95,6 @@ function StockChart({ symbol, apiKey, range, avgPrice }) { // Added avgPrice pro
             labelStyle={{ color: 'rgba(255,255,255,0.5)', marginBottom: '4px' }}
           />
 
-          {/* NEW: THE AVERAGE PRICE DOTTED LINE */}
           {avgPrice > 0 && (
             <ReferenceLine 
               y={avgPrice} 
