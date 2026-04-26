@@ -12,8 +12,7 @@ Node.js: version 16 or higher.
 
 Internet Connection: Required for the frontend to communicate with the live API and for fetching market data.
 
-Database Setup (Fresh Environment)
-The project utilises a MySQL database (hosted on Aiven for production). To initialise a fresh database for testing:
+Database Setup:
 
 Create Database: Create a new MySQL schema named defaultdb.
 
