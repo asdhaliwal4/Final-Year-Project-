@@ -12,27 +12,25 @@ function Dashboard({ user, handleLogout }) {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  const fetchPortfolio = useCallback(() => {
-    // I create a unique key for this specific user so their data stays in the right "vault"
+  // I've added 'forceRefresh' here so I can tell the app to ignore the cache when needed
+  const fetchPortfolio = useCallback((forceRefresh = false) => {
     const CACHE_KEY = `portfolio_cache_${user.id}`;
-    // I've decided to keep the data fresh for 5 minutes before I ask the server again
     const CACHE_DURATION = 5 * 60 * 1000; 
 
-    // I start by checking if I already have a recent version of the portfolio in the browser
-    const savedCache = localStorage.getItem(CACHE_KEY);
-    if (savedCache) {
-      const { data, timestamp } = JSON.parse(savedCache);
-      const isFresh = Date.now() - timestamp < CACHE_DURATION;
-
-      // If the saved data is still fresh, I'll just use it and stop here to save API calls
-      if (isFresh) {
-        setPortfolio(data);
-        setLoading(false);
-        return; 
+    // If I'm NOT forcing a refresh, I check the cache first
+    if (!forceRefresh) {
+      const savedCache = localStorage.getItem(CACHE_KEY);
+      if (savedCache) {
+        const { data, timestamp } = JSON.parse(savedCache);
+        if (Date.now() - timestamp < CACHE_DURATION) {
+          setPortfolio(data);
+          setLoading(false);
+          return; 
+        }
       }
     }
 
-    // If I don't have a fresh copy, I'll put the app in a loading state and fetch from the server
+    // If I AM forcing a refresh, or the cache is old, I hit the live server
     setLoading(true);
     const token = localStorage.getItem('token');
 
@@ -43,7 +41,6 @@ function Dashboard({ user, handleLogout }) {
       }
     })
       .then((res) => {
-        // I check for security issues—if the user isn't authorised, I log them out immediately
         if (res.status === 401 || res.status === 403) {
           handleLogout(); 
           return;
@@ -52,8 +49,11 @@ function Dashboard({ user, handleLogout }) {
         return res.json();
       })
       .then((data) => {
+        // I'm adding a console log here so I can see EXACTLY what the server sends back
+        console.log("DEBUG: Portfolio received from server:", data);
+        
         setPortfolio(data);
-        // I save a fresh copy of the data and the current time into the browser vault
+        // I update the cache with the brand new data
         localStorage.setItem(CACHE_KEY, JSON.stringify({
           data: data,
           timestamp: Date.now()
@@ -67,36 +67,21 @@ function Dashboard({ user, handleLogout }) {
   }, [user.id, handleLogout]);
 
   useEffect(() => {
-    // I only fetch the data if a valid user is actually logged in
     if (user) fetchPortfolio();
   }, [user, fetchPortfolio]);
 
   const handleDelete = async (symbol) => {
-    // I make sure to double-check with the user before I remove all holdings of a stock
     if (window.confirm(`Are you sure you want to remove all ${symbol} shares?`)) {
       try {
         const token = localStorage.getItem('token');
-
         const response = await fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/remove-all/${symbol}`, {
           method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (response.status === 401 || response.status === 403) {
-          handleLogout();
-          return;
-        }
-
         if (response.ok) {
-          // I clear the cache now so that the deleted stock doesn't "ghost" back on the next refresh
-          localStorage.removeItem(`portfolio_cache_${user.id}`);
-          
-          // I add a tiny delay here too just to ensure the deletion is fully processed
-          setTimeout(() => {
-            fetchPortfolio(); 
-          }, 500);
+          // I force a fresh fetch immediately after a delete
+          fetchPortfolio(true); 
         }
       } catch (err) {
         console.error("Delete failed:", err);
@@ -104,15 +89,14 @@ function Dashboard({ user, handleLogout }) {
     }
   };
 
-  // I use this section to combine multiple purchases of the same stock into one single row
+  // I combine multiple purchases of the same stock into one single row
   const mergedPortfolio = portfolio.reduce((acc, item) => {
     const symbol = item.symbol;
-    const q = parseFloat(item.quantity);
-    const p = parseFloat(item.purchase_price);
-    const cp = parseFloat(item.current_price || 0);
+    const q = parseFloat(item.quantity) || 0;
+    const p = parseFloat(item.purchase_price) || 0;
+    const cp = parseFloat(item.current_price) || p;
     
     if (!acc[symbol]) {
-      // If I haven't seen this stock yet, I create a new entry for it and calculate initial totals
       acc[symbol] = {
         ...item,
         quantity: q,
@@ -121,19 +105,15 @@ function Dashboard({ user, handleLogout }) {
         date_added: item.created_at || new Date().toISOString()
       };
     } else {
-      // If I've already seen this stock, I add the new quantity and cost to the running total
       acc[symbol].quantity += q;
       acc[symbol].total_cost += q * p;
       acc[symbol].total_value = acc[symbol].quantity * cp;
     }
     
-    // I calculate the total gain or loss for the combined position
     acc[symbol].gain_loss = (acc[symbol].total_value - acc[symbol].total_cost).toFixed(2);
-    
     return acc;
   }, {});
 
-  // I map over the combined stocks to calculate the weighted average price for each one
   const displayPortfolio = Object.values(mergedPortfolio).map(stock => {
     return {
       ...stock,
@@ -141,7 +121,6 @@ function Dashboard({ user, handleLogout }) {
     };
   });
 
-  // I calculate the total value of the entire portfolio here
   const totalValue = portfolio.reduce((sum, item) => sum + parseFloat(item.total_value || 0), 0);
 
   if (!user) return <div className="loading-screen"><div className="spinner"></div></div>;
@@ -182,15 +161,12 @@ function Dashboard({ user, handleLogout }) {
             <AddAssetForm 
               user={user} 
               onComplete={() => {
-                // I wipe the cache so the dashboard is forced to get fresh data from the server
-                localStorage.removeItem(`portfolio_cache_${user.id}`);
                 setShowForm(false);
-                
-                // I wait 500ms to give the Aiven database enough time to finish the update
-                // before I ask for the new list. This fixes the "no immediate update" issue.
+                // I use the 'true' flag here to force the app to ignore the cache
+                // and I still wait 800ms just to be extra safe for the cloud DB
                 setTimeout(() => {
-                  fetchPortfolio(); 
-                }, 500);
+                  fetchPortfolio(true); 
+                }, 800);
               }} 
             />
           </div>
@@ -219,7 +195,7 @@ function Dashboard({ user, handleLogout }) {
                 {displayPortfolio.map((item) => (
                   <tr key={item.symbol}>
                     <td className="sym">
-                      <Link to={`/stock/${item.symbol}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>
+                      <Link to={`/stock/${item.symbol}`} className="stock-link">
                         <strong>{item.symbol}</strong>
                       </Link>
                     </td>
@@ -236,7 +212,7 @@ function Dashboard({ user, handleLogout }) {
                     <td>
                       <button className="remove-btn" onClick={() => handleDelete(item.symbol)}>
                         Remove
-                      </button>   
+                      </button>   
                     </td>
                   </tr>
                 ))}
