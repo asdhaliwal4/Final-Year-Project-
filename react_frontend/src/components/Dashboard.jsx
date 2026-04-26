@@ -13,6 +13,26 @@ function Dashboard({ user, handleLogout }) {
   const [showForm, setShowForm] = useState(false);
 
   const fetchPortfolio = useCallback(() => {
+    // Unique key for this user's data in the browser vault
+    const CACHE_KEY = `portfolio_cache_${user.id}`;
+    // Set cache life to 5 minutes
+    const CACHE_DURATION = 5 * 60 * 1000; 
+
+    // Check if we have a saved version of the portfolio in the browser
+    const savedCache = localStorage.getItem(CACHE_KEY);
+    if (savedCache) {
+      const { data, timestamp } = JSON.parse(savedCache);
+      const isFresh = Date.now() - timestamp < CACHE_DURATION;
+
+      // If the saved data is still fresh, use it and stop the function
+      if (isFresh) {
+        setPortfolio(data);
+        setLoading(false);
+        return; 
+      }
+    }
+
+    // If no fresh cache exists, fetch from the live server
     setLoading(true);
     const token = localStorage.getItem('token');
 
@@ -32,6 +52,11 @@ function Dashboard({ user, handleLogout }) {
       })
       .then((data) => {
         setPortfolio(data);
+        // Save the fresh data and current time to the browser vault
+        localStorage.setItem(CACHE_KEY, JSON.stringify({
+          data: data,
+          timestamp: Date.now()
+        }));
         setLoading(false);
       })
       .catch((err) => {
@@ -44,7 +69,6 @@ function Dashboard({ user, handleLogout }) {
     if (user) fetchPortfolio();
   }, [user, fetchPortfolio]);
 
-  // Function to remove all holdings of a specific stock
   const handleDelete = async (symbol) => {
     if (window.confirm(`Are you sure you want to remove all ${symbol} shares?`)) {
       try {
@@ -63,6 +87,8 @@ function Dashboard({ user, handleLogout }) {
         }
 
         if (response.ok) {
+          // Clear the cache so the deleted stock stays gone on refresh
+          localStorage.removeItem(`portfolio_cache_${user.id}`);
           fetchPortfolio(); 
         }
       } catch (err) {
@@ -71,7 +97,6 @@ function Dashboard({ user, handleLogout }) {
     }
   };
 
-  // Merge logic to combine multiple purchases of the same stock
   const mergedPortfolio = portfolio.reduce((acc, item) => {
     const symbol = item.symbol;
     
@@ -138,6 +163,8 @@ function Dashboard({ user, handleLogout }) {
             <AddAssetForm 
               user={user} 
               onComplete={() => {
+                // Wipe the cache so the new asset appears immediately
+                localStorage.removeItem(`portfolio_cache_${user.id}`);
                 setShowForm(false);
                 fetchPortfolio(); 
               }} 
@@ -145,7 +172,7 @@ function Dashboard({ user, handleLogout }) {
           </div>
         )}
 
-        {loading ? (
+        {loading && portfolio.length === 0 ? (
           <div className="status-msg">Syncing with markets...</div>
         ) : error ? (
           <div className="status-msg error">{error}</div>
@@ -183,10 +210,9 @@ function Dashboard({ user, handleLogout }) {
                       {new Date(item.date_added).toLocaleDateString('en-GB')}
                     </td>
                     <td>
-                      {/* Changed from item.id to item.symbol to clear all shares */}
                       <button className="remove-btn" onClick={() => handleDelete(item.symbol)}>
-  Remove
-</button>   
+                        Remove
+                      </button>   
                     </td>
                   </tr>
                 ))}
