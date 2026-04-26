@@ -12,60 +12,40 @@ function Dashboard({ user, handleLogout }) {
   const [error, setError] = useState(null);
   const [showForm, setShowForm] = useState(false);
 
-  // I've added 'forceRefresh' here so I can tell the app to ignore the cache when needed
-  const fetchPortfolio = useCallback((forceRefresh = false) => {
-    const CACHE_KEY = `portfolio_cache_${user.id}`;
-    const CACHE_DURATION = 5 * 60 * 1000; 
-
-    // If I'm NOT forcing a refresh, I check the cache first
-    if (!forceRefresh) {
-      const savedCache = localStorage.getItem(CACHE_KEY);
-      if (savedCache) {
-        const { data, timestamp } = JSON.parse(savedCache);
-        if (Date.now() - timestamp < CACHE_DURATION) {
-          setPortfolio(data);
-          setLoading(false);
-          return; 
-        }
-      }
-    }
-
-    // If I AM forcing a refresh, or the cache is old, I hit the live server
+  // I've simplified this function to always fetch fresh data from my Render backend
+  const fetchPortfolio = useCallback(async () => {
     setLoading(true);
     const token = localStorage.getItem('token');
 
-    fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/${user.id}`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    })
-      .then((res) => {
-        if (res.status === 401 || res.status === 403) {
-          handleLogout(); 
-          return;
+    try {
+      const response = await fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
-        if (!res.ok) throw new Error('Failed to fetch portfolio');
-        return res.json();
-      })
-      .then((data) => {
-        // I'm adding a console log here so I can see EXACTLY what the server sends back
-        console.log("DEBUG: Portfolio received from server:", data);
-        
-        setPortfolio(data);
-        // I update the cache with the brand new data
-        localStorage.setItem(CACHE_KEY, JSON.stringify({
-          data: data,
-          timestamp: Date.now()
-        }));
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
       });
+
+      if (response.status === 401 || response.status === 403) {
+        handleLogout(); 
+        return;
+      }
+
+      if (!response.ok) throw new Error('Failed to fetch portfolio');
+      
+      const data = await response.json();
+      
+      // I'm logging this to the console so I can verify the new stocks are arriving
+      console.log("Real-time portfolio data received:", data);
+      
+      setPortfolio(data);
+      setLoading(false);
+    } catch (err) {
+      setError(err.message);
+      setLoading(false);
+    }
   }, [user.id, handleLogout]);
 
+  // I trigger the fetch the moment the component loads
   useEffect(() => {
     if (user) fetchPortfolio();
   }, [user, fetchPortfolio]);
@@ -80,8 +60,8 @@ function Dashboard({ user, handleLogout }) {
         });
 
         if (response.ok) {
-          // I force a fresh fetch immediately after a delete
-          fetchPortfolio(true); 
+          // I fetch the latest data immediately after a successful deletion
+          fetchPortfolio(); 
         }
       } catch (err) {
         console.error("Delete failed:", err);
@@ -89,7 +69,7 @@ function Dashboard({ user, handleLogout }) {
     }
   };
 
-  // I combine multiple purchases of the same stock into one single row
+  // I merge individual transactions into a single row per stock symbol
   const mergedPortfolio = portfolio.reduce((acc, item) => {
     const symbol = item.symbol;
     const q = parseFloat(item.quantity) || 0;
@@ -110,10 +90,12 @@ function Dashboard({ user, handleLogout }) {
       acc[symbol].total_value = acc[symbol].quantity * cp;
     }
     
+    // I calculate the total gain or loss based on the combined position
     acc[symbol].gain_loss = (acc[symbol].total_value - acc[symbol].total_cost).toFixed(2);
     return acc;
   }, {});
 
+  // I transform the merged data into an array and calculate the weighted averages
   const displayPortfolio = Object.values(mergedPortfolio).map(stock => {
     return {
       ...stock,
@@ -162,10 +144,10 @@ function Dashboard({ user, handleLogout }) {
               user={user} 
               onComplete={() => {
                 setShowForm(false);
-                // I use the 'true' flag here to force the app to ignore the cache
-                // and I still wait 800ms just to be extra safe for the cloud DB
+                // I wait 800ms to ensure the database has fully committed the change
+                // before I request the fresh portfolio list.
                 setTimeout(() => {
-                  fetchPortfolio(true); 
+                  fetchPortfolio(); 
                 }, 800);
               }} 
             />
@@ -195,7 +177,7 @@ function Dashboard({ user, handleLogout }) {
                 {displayPortfolio.map((item) => (
                   <tr key={item.symbol}>
                     <td className="sym">
-                      <Link to={`/stock/${item.symbol}`} className="stock-link">
+                      <Link to={`/stock/${item.symbol}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>
                         <strong>{item.symbol}</strong>
                       </Link>
                     </td>
