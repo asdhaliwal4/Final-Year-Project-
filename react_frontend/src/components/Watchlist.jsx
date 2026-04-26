@@ -9,18 +9,18 @@ function Watchlist({ user, handleLogout }) { // Added handleLogout here
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Grab the token
+    //  Grab the token
     const token = localStorage.getItem('token');
 
     fetch(`https://final-year-project-iaod.onrender.com/api/watchlist/${user.id}`, {
-      // 2. Show the token to the backend
+      //  Show the token to the backend
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     })
       .then(res => {
-        // 3. Check for expired session
+        // Check for expired session
         if (res.status === 401 || res.status === 403) {
           handleLogout();
           return;

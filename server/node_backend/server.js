@@ -110,9 +110,9 @@ app.put("/api/user/change-password", async (req, res) => {
   } catch (error) { res.status(500).json({ error: "Failed to change password." }); }
 });
 
-// --- WATCHLIST ROUTES START HERE ---
+//  WATCHLIST ROUTES S
 
-// 1. Add to Watchlist
+//  Add to Watchlist
 app.post("/api/watchlist/add", authenticateToken, async (req, res) => {
   try {
     const { user_id, symbol } = req.body;
@@ -125,7 +125,7 @@ app.post("/api/watchlist/add", authenticateToken, async (req, res) => {
   }
 });
 
-// 2. Remove from Watchlist
+//  Remove from Watchlist
 app.delete("/api/watchlist/:userId/:symbol", async (req, res) => {
   try {
     const { userId, symbol } = req.params;
@@ -134,7 +134,7 @@ app.delete("/api/watchlist/:userId/:symbol", async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// 3. Check if stock is in Watchlist
+//  Check if stock is in Watchlist
 app.get("/api/watchlist/check/:userId/:symbol", async (req, res) => {
   try {
     const { userId, symbol } = req.params;
@@ -143,7 +143,7 @@ app.get("/api/watchlist/check/:userId/:symbol", async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// 4. Get Watchlist with Live Prices
+//  Get Watchlist with Live Prices
 app.get("/api/watchlist/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -159,7 +159,7 @@ app.get("/api/watchlist/:userId", async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// --- WATCHLIST ROUTES END HERE ---
+//  WATCHLIST ROUTES END 
 
 // Portfolio Routes
 app.get("/api/portfolio/:userId", authenticateToken, async (req, res) => {

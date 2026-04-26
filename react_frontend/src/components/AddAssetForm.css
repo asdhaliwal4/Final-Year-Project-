@@ -1,5 +1,5 @@
 .asset-ticket {
-  position: relative; /* Essential for placing the X */
+  position: relative; 
   background: var(--glass);
   backdrop-filter: blur(25px);
   border: 1px solid var(--glass-border);
@@ -11,7 +11,7 @@
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
-/* My new Top-Right Cross */
+/* Top Right Cross */
 .close-ticket-btn {
   position: absolute;
   top: 15px;
@@ -137,7 +137,7 @@
   transform: translateY(-2px);
 }
 
-/* The Shake Animation */
+/* Shake Animation */
 @keyframes shake {
   0% { transform: translateX(0); }
   25% { transform: translateX(-6px); }

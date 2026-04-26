@@ -9,18 +9,18 @@ function History({ user, handleLogout }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Grab the token from the vault
+    // Grab the token from the vault
     const token = localStorage.getItem('token');
 
     fetch(`https://final-year-project-iaod.onrender.com/api/portfolio/history/${user.id}`, {
-      // 2. Add the Authorization header
+      // Add the Authorization header
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json'
       }
     })
       .then(res => {
-        // 3. Security check: if token is invalid or expired, log out
+        // Security check: if token is invalid or expired, log out
         if (res.status === 401 || res.status === 403) {
           handleLogout();
           return;
