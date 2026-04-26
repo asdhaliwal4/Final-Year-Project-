@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 
 dotenv.config();
 
+// I've set up the connection pool to handle my Aiven MySQL instance securely
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -31,8 +32,8 @@ app.use(cors({
 
 app.use(express.json());
 
+// This is my "Bouncer" middleware—it verifies the JWT before letting users see their private data
 const authenticateToken = (req, res, next) => {
-  // Get token from the 'Authorisation' header
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -40,8 +41,6 @@ const authenticateToken = (req, res, next) => {
 
   jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
     if (err) return res.status(403).json({ message: "Invalid or Expired Token" });
-    
-    // Attach the user data to the request so other routes can use it
     req.user = user; 
     next(); 
   });
@@ -49,7 +48,8 @@ const authenticateToken = (req, res, next) => {
 
 app.get("/", (req, res) => res.send("Node backend is running!"));
 
-// Auth Routes
+// --- AUTHENTICATION ROUTES ---
+
 app.post("/api/register", async (req, res) => {
   try {
     const { first_name, last_name, date_of_birth, email, password } = req.body;
@@ -59,6 +59,7 @@ app.post("/api/register", async (req, res) => {
     res.status(201).json({ message: "User created!", userId: result.insertId });
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
+
 app.post("/api/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -71,14 +72,13 @@ app.post("/api/login", async (req, res) => {
     
     if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
-    //  Generate JWT Token
+    // I generate a token that stays valid for 24 hours
     const token = jwt.sign(
       { id: user.id, email: user.email }, 
       process.env.JWT_SECRET, 
-      { expiresIn: "24h" } // Token lasts for 1 day
+      { expiresIn: "24h" }
     );
 
-    // Send the token back to the frontend
     res.status(200).json({ 
       token,
       user: { id: user.id, first_name: user.first_name, last_name: user.last_name, email: user.email } 
@@ -87,7 +87,8 @@ app.post("/api/login", async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// Profile Update Routes
+// --- PROFILE MANAGEMENT ROUTES ---
+
 app.put("/api/user/update-profile", async (req, res) => {
   try {
     const { id, first_name, last_name, email } = req.body;
@@ -110,9 +111,8 @@ app.put("/api/user/change-password", async (req, res) => {
   } catch (error) { res.status(500).json({ error: "Failed to change password." }); }
 });
 
-//  WATCHLIST ROUTES S
+// --- WATCHLIST ROUTES ---
 
-//  Add to Watchlist
 app.post("/api/watchlist/add", authenticateToken, async (req, res) => {
   try {
     const { user_id, symbol } = req.body;
@@ -125,7 +125,6 @@ app.post("/api/watchlist/add", authenticateToken, async (req, res) => {
   }
 });
 
-//  Remove from Watchlist
 app.delete("/api/watchlist/:userId/:symbol", async (req, res) => {
   try {
     const { userId, symbol } = req.params;
@@ -134,7 +133,6 @@ app.delete("/api/watchlist/:userId/:symbol", async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-//  Check if stock is in Watchlist
 app.get("/api/watchlist/check/:userId/:symbol", async (req, res) => {
   try {
     const { userId, symbol } = req.params;
@@ -143,7 +141,6 @@ app.get("/api/watchlist/check/:userId/:symbol", async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-//  Get Watchlist with Live Prices
 app.get("/api/watchlist/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -159,19 +156,31 @@ app.get("/api/watchlist/:userId", async (req, res) => {
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-//  WATCHLIST ROUTES END 
+// --- PORTFOLIO & ASSET ROUTES ---
 
-// Portfolio Routes
+// I've optimised this to ensure stocks like NVIDIA don't vanish if the API hits a rate limit
 app.get("/api/portfolio/:userId", authenticateToken, async (req, res) => {
   try {
     const { userId } = req.params;
     const [assets] = await pool.query("SELECT * FROM assets WHERE user_id = ? AND deleted_at IS NULL", [userId]);
+    
     const portfolioWithPrices = await Promise.all(assets.map(async (asset) => {
       try {
         const response = await axios.get(`https://finnhub.io/api/v1/quote?symbol=${asset.symbol.toUpperCase()}&token=${process.env.FINNHUB_API_KEY}`);
-        const currentPrice = response.data.c || asset.purchase_price || 0;
-        return { ...asset, current_price: currentPrice, total_value: (currentPrice * asset.quantity).toFixed(2), gain_loss: ((currentPrice - asset.purchase_price) * asset.quantity).toFixed(2) };
-      } catch (err) { return { ...asset, current_price: 0 }; }
+        
+        // If the API fails or is too slow, I fall back to the purchase price so the user still sees their stock
+        const currentPrice = response.data.c && response.data.c !== 0 ? response.data.c : asset.purchase_price;
+        
+        return { 
+          ...asset, 
+          current_price: currentPrice, 
+          total_value: (currentPrice * asset.quantity).toFixed(2), 
+          gain_loss: ((currentPrice - asset.purchase_price) * asset.quantity).toFixed(2) 
+        };
+      } catch (err) { 
+        // If the rate limit is hit, I still return the asset data to keep the dashboard stable
+        return { ...asset, current_price: asset.purchase_price, total_value: (asset.purchase_price * asset.quantity).toFixed(2), gain_loss: "0.00" }; 
+      }
     }));
     res.json(portfolioWithPrices);
   } catch (error) { res.status(500).json({ message: "Error updating portfolio." }); }
@@ -180,6 +189,7 @@ app.get("/api/portfolio/:userId", authenticateToken, async (req, res) => {
 app.get("/api/portfolio/history/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
+    // I only fetch assets that have been marked as deleted (sold/removed)
     const [history] = await pool.query("SELECT * FROM assets WHERE user_id = ? AND deleted_at IS NOT NULL ORDER BY deleted_at DESC", [userId]);
     res.json(history);
   } catch (error) { res.status(500).json({ message: "Error fetching history." }); }
@@ -188,7 +198,8 @@ app.get("/api/portfolio/history/:userId", async (req, res) => {
 app.post("/api/assets/add", authenticateToken, async (req, res) => {
   try {
     const { user_id, symbol, quantity, purchase_price } = req.body;
-    await pool.query(`INSERT INTO assets (user_id, symbol, quantity, purchase_price) VALUES (?, ?, ?, ?)`, [user_id, symbol.toUpperCase(), quantity, purchase_price]);
+    // I use .trim() and .toUpperCase() to keep my database clean and consistent
+    await pool.query(`INSERT INTO assets (user_id, symbol, quantity, purchase_price) VALUES (?, ?, ?, ?)`, [user_id, symbol.toUpperCase().trim(), quantity, purchase_price]);
     res.status(201).json({ message: "Asset added!" });
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
@@ -196,12 +207,30 @@ app.post("/api/assets/add", authenticateToken, async (req, res) => {
 app.delete("/api/assets/:id", authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
+    // I use a "Soft Delete" by setting a timestamp instead of erasing the row entirely
     await pool.query("UPDATE assets SET deleted_at = NOW() WHERE id = ?", [id]);
     res.status(200).json({ message: "Moved to history" });
   } catch (error) { res.status(500).json({ error: error.message }); }
 });
 
-// Search Routes
+app.delete("/api/portfolio/remove-all/:symbol", authenticateToken, async (req, res) => {
+  const { symbol } = req.params;
+  const userId = req.user.id; 
+
+  try {
+    const [result] = await pool.query(
+      "UPDATE assets SET deleted_at = NOW() WHERE user_id = ? AND symbol = ? AND deleted_at IS NULL",
+      [userId, symbol.toUpperCase()]
+    );
+
+    if (result.affectedRows === 0) return res.status(404).json({ message: "No active holdings found" });
+
+    res.json({ message: `Successfully removed all ${symbol} holdings` });
+  } catch (err) { res.status(500).json({ message: "Internal server error" }); }
+});
+
+// --- SEARCH & MARKET DATA ROUTES ---
+
 app.get("/api/search", async (req, res) => {
   try {
     const { q } = req.query;
@@ -218,34 +247,16 @@ app.get("/api/quote/:symbol", async (req, res) => {
   } catch (error) { res.status(500).json({ message: "Quote error." }); }
 });
 
+// --- ACCOUNT CLEANUP ---
+
 app.delete("/api/user/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    // I make sure to clean up the assets before deleting the user to maintain database integrity
     await pool.query("DELETE FROM assets WHERE user_id = ?", [id]);
     await pool.query("DELETE FROM users WHERE id = ?", [id]);
     res.status(200).json({ message: "Account deleted" });
   } catch (error) { res.status(500).json({ error: "Delete error." }); }
-});
-
-app.delete("/api/portfolio/remove-all/:symbol", authenticateToken, async (req, res) => {
-  const { symbol } = req.params;
-  const userId = req.user.id; 
-
-  try {
-    const [result] = await pool.query(
-      "UPDATE assets SET deleted_at = NOW() WHERE user_id = ? AND symbol = ? AND deleted_at IS NULL",
-      [userId, symbol.toUpperCase()]
-    );
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "No active holdings found" });
-    }
-
-    res.json({ message: `Successfully removed all ${symbol} holdings` });
-  } catch (err) {
-    console.error("Database error:", err);
-    res.status(500).json({ message: "Internal server error" });
-  }
 });
 
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
